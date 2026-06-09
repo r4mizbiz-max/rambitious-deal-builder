@@ -35,7 +35,7 @@
     if (deal.whop) { location.replace(deal.whop); return; }
   }
   // No checkout link on the deal → just go sign (collect agreement, pay arranged separately).
-  var to = 'https://www.rambitiousmedia.com/agreement' + (t ? ('?t=' + encodeURIComponent(t)) : '');
+  var to = 'https://www.rambitiousmedia.com/agreement-page' + (t ? ('?t=' + encodeURIComponent(t)) : '');
   document.getElementById('msg').innerHTML = 'Opening your agreement… <a href="' + to + '">continue</a>';
   location.replace(to);
 })();

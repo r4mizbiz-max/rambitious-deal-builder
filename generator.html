@@ -41,6 +41,13 @@
 </style>
 </head>
 <body>
+<div id="gate" style="position:fixed;inset:0;z-index:999;background:#0a0b10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;padding:20px">
+  <div style="font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;font-weight:600">Rambitious · internal</div>
+  <input id="gatePw" type="password" placeholder="Password" autocomplete="off"
+    style="padding:14px 16px;border-radius:12px;border:1.5px solid #2a2b35;background:#15161d;color:#fff;font-size:16px;width:min(280px,90vw);font-family:inherit;text-align:center">
+  <button id="gateBtn" style="padding:13px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,#7B5BFF,#F580B8);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">Enter</button>
+  <div id="gateErr" style="font-size:13px;color:#ff6b6b;min-height:16px"></div>
+</div>
 <div class="wrap">
   <div class="head">
     <div class="ey">Rambitious Media · internal</div>
@@ -67,13 +74,9 @@
       <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
     </div>
     <div class="f">
-      <label>Whop checkout link <span style="text-transform:none;font-weight:500">(auto-generate, or paste one)</span></label>
-      <div class="linkrow">
-        <input id="whop" type="text" placeholder="https://whop.com/checkout/plan_…">
-        <button type="button" id="mintBtn">Mint via Whop</button>
-      </div>
-      <div class="status" id="mintStatus"></div>
-      <div class="hint">"Mint via Whop" creates a Whop plan for the upfront price through your Apps Script. If you'd rather, paste an existing checkout link.</div>
+      <label>Whop checkout link <span style="text-transform:none;font-weight:500">(optional)</span></label>
+      <input id="whop" type="text" placeholder="https://whop.com/checkout/plan_…">
+      <div class="hint">Make the plan once in Whop for this price, paste its checkout link here. The generator remembers your last link per deal type. Leave blank to just collect the signed agreement (no auto-redirect to pay).</div>
     </div>
 
     <div class="pre" id="preview"></div>
@@ -90,9 +93,24 @@
 </div>
 
 <script>
+/* ─── soft password gate (client-side; deters casual visitors, not a vault) ─── */
+const GATE_HASH = 'ee4fe1752cd50b5f44510bb50d215e1bef47ff6b09108bb6e9d75fee1fd2c5b4';
+async function sha256(s){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function tryGate(){
+  if (await sha256(document.getElementById('gatePw').value) === GATE_HASH){
+    sessionStorage.setItem('rmb_gate','1');
+    document.getElementById('gate').style.display = 'none';
+  } else { document.getElementById('gateErr').textContent = 'Nope.'; }
+}
+if (sessionStorage.getItem('rmb_gate') === '1'){ document.getElementById('gate').style.display = 'none'; }
+document.getElementById('gateBtn').addEventListener('click', tryGate);
+document.getElementById('gatePw').addEventListener('keydown', e => { if (e.key === 'Enter') tryGate(); });
+
 /* ════════ CONFIG ════════ */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMvap-Yonchi1i52zb4fUnD85yxAFMMf3UKOdzf6ccufcvX-h4Bhcg4va8xVG4XZoxCw/exec';
-const AGREEMENT_URL   = 'https://www.rambitiousmedia.com/agreement';
+const AGREEMENT_URL = 'https://www.rambitiousmedia.com/agreement';
 
 let TYPE = 'pif';
 const $ = id => document.getElementById(id);
@@ -111,6 +129,7 @@ function syncFields(){
   $('estWrap').classList.toggle('hide', !pif);
   $('daysWrap').classList.toggle('hide', !pif);
   if (pif && $('upfront').value === '997') $('upfront').value = '6000';
+  loadWhop();
   renderPreview();
 }
 
@@ -145,36 +164,10 @@ function encodeToken(obj){
   return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
-/* Mint a Whop plan via Apps Script (JSONP — Apps Script can't do CORS) */
-let jpId = 0;
-function jsonp(url){
-  return new Promise((resolve, reject) => {
-    const cb = '__plan' + (++jpId);
-    const s = document.createElement('script');
-    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 25000);
-    function cleanup(){ clearTimeout(timer); delete window[cb]; s.remove(); }
-    window[cb] = (resp) => { cleanup(); resolve(resp); };
-    s.onerror = () => { cleanup(); reject(new Error('network')); };
-    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
-    document.body.appendChild(s);
-  });
-}
-$('mintBtn').addEventListener('click', async () => {
-  const price = Number($('upfront').value || 0);
-  if (!price) { setStatus('Set a price first.', 'err'); return; }
-  setStatus('Minting Whop plan…', '');
-  $('mintBtn').disabled = true;
-  try {
-    const label = encodeURIComponent((TYPE === 'pif' ? 'PIF ' : 'PAYG ') + ($('niche').value || 'Rambitious') + ' $' + price);
-    const resp = await jsonp(`${APPS_SCRIPT_URL}?action=createPlan&price=${price}&label=${label}`);
-    if (resp && resp.ok && resp.link) { $('whop').value = resp.link; setStatus('✓ Plan created: ' + resp.plan_id, 'ok'); }
-    else setStatus('Whop error: ' + (resp && resp.error || 'unknown') + ' — paste a link manually.', 'err');
-  } catch (e) {
-    setStatus('Could not reach Apps Script (' + e.message + '). Paste a Whop link manually.', 'err');
-  }
-  $('mintBtn').disabled = false;
-});
-function setStatus(msg, cls){ const el = $('mintStatus'); el.textContent = msg; el.className = 'status ' + (cls||''); }
+/* Remember the last Whop checkout link per deal type (this browser only). */
+function whopKey(){ return 'rmb_whop_' + TYPE; }
+function loadWhop(){ $('whop').value = localStorage.getItem(whopKey()) || ''; }
+$('whop').addEventListener('input', () => localStorage.setItem(whopKey(), $('whop').value.trim()));
 
 /* Generate the client link */
 $('genBtn').addEventListener('click', () => {

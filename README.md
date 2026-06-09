@@ -17,17 +17,21 @@ No new infra — same GHL page + Google Apps Script + Whop you already run.
 ## Files
 | File | Where it goes |
 |---|---|
-| `agreement.html` | Paste into the GHL custom-code page at **`/agreement`** (replaces the current one). Token-driven; legacy niche flow still works if no token. |
-| `generator.html` | Your internal tool. Live on GitHub Pages (bookmark it) or just open the file. |
-| `apps-script.gs` | Paste into your Apps Script project → **Deploy → Manage deployments → Edit → New version**. |
+| `generator.html` | **Live as a GitHub Page** (password-gated). Bookmark it. Pure client-side — no server, no keys. |
+| `agreement.html` | Paste into the GHL custom-code page at **`/agreement`** (replaces the current one). Token-driven; legacy niche flow still works if no token. Uses your **existing** Apps Script for the Drive-save + emails — nothing new to set up. |
+| `apps-script.gs` | **Optional.** Your existing deployed script already saves the PDF + emails. This version just makes those notification emails show the new PIF/PAYG pricing instead of the old $997 text. Paste + redeploy (New version) only if you care about that. |
 
-## One-time setup (Apps Script)
-In the Apps Script project: **Project Settings (gear) → Script Properties**, add:
-- `WHOP_API_KEY` = your `apik_…` key
-- `WHOP_PRODUCT_ID` = a Whop product to attach plans to (e.g. create one called
-  "Rambitious Onboarding" in Whop, or reuse an existing `prod_…`)
+## Setup — that's it
+1. Paste `agreement.html` into the GHL `/agreement` page.
+2. Open the generator GitHub Page (password gated), pick a deal, set the price, paste a Whop
+   checkout link for that price, hit **Generate**.
 
-Then re-deploy (**New version**) so the new `doGet`/`createWhopPlan` + dynamic emails go live.
+No Apps Script changes required. (A static page can't safely auto-mint Whop checkouts — that
+would need a server — so you paste the Whop link; the generator remembers it per deal type.)
+
+## Password gate
+The generator is gated by a client-side SHA-256 check. It deters casual visitors but is **not**
+real security (the repo is public). Don't put anything truly sensitive in this repo.
 
 ## The token
 `?t=` is base64url(JSON) of:

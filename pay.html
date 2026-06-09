@@ -56,7 +56,7 @@
     : ('$' + fmt(deal.upfront) + ' upfront · sign right after payment');
 
   // After paying, Whop returns them to the agreement page WITH the same token → it auto-adapts.
-  var returnUrl = 'https://www.rambitiousmedia.com/agreement-page?t=' + encodeURIComponent(t);
+  var returnUrl = 'https://www.rambitiousmedia.com/ament?t=' + encodeURIComponent(t);
   var planId = (String(deal.whop||'').match(/(plan_[A-Za-z0-9]+)/) || [])[1];
 
   if (!planId){

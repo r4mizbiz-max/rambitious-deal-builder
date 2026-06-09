@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rambitious — Deal Link Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0a0b10;--mut:#6b6b78;--line:#e6e6ec;--soft:#f6f6f8;--accent:#7B5BFF;--accent2:#F580B8;--good:#0ca37f}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0a0b10;color:var(--ink);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
+  .wrap{width:min(680px,100%);background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .head{background:linear-gradient(135deg,#7B5BFF,#B57BFF 40%,#F580B8 75%,#FF9A6B);padding:30px 34px;color:#fff}
+  .head .ey{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;font-weight:600}
+  .head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+  .head p{font-size:13.5px;opacity:.9;margin-top:6px;line-height:1.5}
+  .body{padding:28px 34px 34px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+  .seg button{padding:16px;border-radius:14px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;text-align:left;transition:.15s}
+  .seg button.on{border-color:var(--accent);background:#f7f4ff}
+  .seg button b{display:block;font-size:15px;font-weight:700}
+  .seg button span{font-size:12px;color:var(--mut)}
+  label{display:block;font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .f{margin-bottom:16px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:15px;color:var(--ink);background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .pre{padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--line);font-size:13.5px;color:#3b3f4a;line-height:1.6;margin-bottom:20px}
+  .pre b{color:var(--ink)}
+  .btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#7B5BFF,#F580B8);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .out{margin-top:22px;display:none}
+  .out.show{display:block}
+  .linkrow{display:flex;gap:8px;margin-bottom:10px}
+  .linkrow input{font-size:13px;background:var(--soft)}
+  .linkrow button{flex:0 0 auto;padding:0 16px;border:1.5px solid var(--accent);background:#fff;color:var(--accent);border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}
+  .hint{font-size:12px;color:var(--mut);margin-top:4px}
+  .hide{display:none !important}
+  .status{font-size:12.5px;margin-top:8px;min-height:16px}
+  .status.err{color:#c0392b}.status.ok{color:var(--good)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="ey">Rambitious Media · internal</div>
+    <h1>Deal Link Builder</h1>
+    <p>Pick the structure, set the price, hit generate. You get one link on your domain — it mints the Whop checkout and the agreement adapts itself.</p>
+  </div>
+  <div class="body">
+
+    <div class="seg" id="seg">
+      <button data-type="pif" class="on"><b>Pay in Full</b><span>One price, N estimates, client-funded ads</span></button>
+      <button data-type="payg"><b>Pay as you go</b><span>Setup fee + per-appointment</span></button>
+    </div>
+
+    <div class="grid">
+      <div class="f"><label id="lblUpfront">Upfront / total ($)</label><input id="upfront" type="number" value="6000" min="0" step="100"></div>
+      <div class="f" id="perApptWrap"><label>Per appointment ($)</label><input id="perAppt" type="number" value="300" min="0" step="25"></div>
+    </div>
+    <div class="grid">
+      <div class="f" id="estWrap"><label>Estimates delivered</label><input id="estimates" type="number" value="20" min="1" step="1"></div>
+      <div class="f"><label>Min ad spend / day ($)</label><input id="minDaily" type="number" value="150" min="0" step="10"></div>
+    </div>
+    <div class="grid">
+      <div class="f" id="daysWrap"><label>Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
+      <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
+    </div>
+    <div class="f">
+      <label>Whop checkout link <span style="text-transform:none;font-weight:500">(auto-generate, or paste one)</span></label>
+      <div class="linkrow">
+        <input id="whop" type="text" placeholder="https://whop.com/checkout/plan_…">
+        <button type="button" id="mintBtn">Mint via Whop</button>
+      </div>
+      <div class="status" id="mintStatus"></div>
+      <div class="hint">"Mint via Whop" creates a Whop plan for the upfront price through your Apps Script. If you'd rather, paste an existing checkout link.</div>
+    </div>
+
+    <div class="pre" id="preview"></div>
+
+    <button class="btn" id="genBtn">Generate client link →</button>
+
+    <div class="out" id="out">
+      <label>Send this to the client</label>
+      <div class="linkrow"><input id="clientLink" readonly><button type="button" onclick="copy('clientLink',this)">Copy</button></div>
+      <div class="hint">They open it → review &amp; sign the adapted agreement → get sent to the Whop checkout to pay. The signed PDF lands in your Drive + both inboxes.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ════════ CONFIG ════════ */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMvap-Yonchi1i52zb4fUnD85yxAFMMf3UKOdzf6ccufcvX-h4Bhcg4va8xVG4XZoxCw/exec';
+const AGREEMENT_URL   = 'https://www.rambitiousmedia.com/agreement';
+
+let TYPE = 'pif';
+const $ = id => document.getElementById(id);
+
+/* segmented control */
+document.querySelectorAll('#seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b));
+  TYPE = b.dataset.type;
+  syncFields();
+}));
+
+function syncFields(){
+  const pif = TYPE === 'pif';
+  $('lblUpfront').textContent = pif ? 'Total price ($)' : 'Upfront / setup fee ($)';
+  $('perApptWrap').classList.toggle('hide', pif);
+  $('estWrap').classList.toggle('hide', !pif);
+  $('daysWrap').classList.toggle('hide', !pif);
+  if (pif && $('upfront').value === '997') $('upfront').value = '6000';
+  renderPreview();
+}
+
+function deal(){
+  const d = {
+    type: TYPE,
+    upfront: Number($('upfront').value || 0),
+    perAppt: Number($('perAppt').value || 0),
+    estimates: Number($('estimates').value || 0),
+    minDaily: Number($('minDaily').value || 0),
+    days: Number($('days').value || 0),
+    niche: $('niche').value.trim(),
+    whop: $('whop').value.trim(),
+  };
+  if (d.type === 'pif') { d.perAppt = 0; }
+  return d;
+}
+
+function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+function renderPreview(){
+  const d = deal();
+  $('preview').innerHTML = d.type === 'pif'
+    ? `<b>Pay in Full.</b> $${fmt(d.upfront)} for <b>${d.estimates}</b> qualified estimates. Client funds the ad spend (min $${fmt(d.minDaily)}/day). Fulfilled within <b>${d.days}</b> days.`
+    : `<b>Pay as you go.</b> $${fmt(d.upfront)} upfront + <b>$${fmt(d.perAppt)}</b> per showed appointment. Client funds the ad spend (min $${fmt(d.minDaily)}/day).`;
+}
+['upfront','perAppt','estimates','minDaily','days','niche'].forEach(id => $(id).addEventListener('input', renderPreview));
+
+/* base64url-encode the token (matches agreement's decodeToken) */
+function encodeToken(obj){
+  const json = JSON.stringify(obj);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+/* Mint a Whop plan via Apps Script (JSONP — Apps Script can't do CORS) */
+let jpId = 0;
+function jsonp(url){
+  return new Promise((resolve, reject) => {
+    const cb = '__plan' + (++jpId);
+    const s = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 25000);
+    function cleanup(){ clearTimeout(timer); delete window[cb]; s.remove(); }
+    window[cb] = (resp) => { cleanup(); resolve(resp); };
+    s.onerror = () => { cleanup(); reject(new Error('network')); };
+    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+$('mintBtn').addEventListener('click', async () => {
+  const price = Number($('upfront').value || 0);
+  if (!price) { setStatus('Set a price first.', 'err'); return; }
+  setStatus('Minting Whop plan…', '');
+  $('mintBtn').disabled = true;
+  try {
+    const label = encodeURIComponent((TYPE === 'pif' ? 'PIF ' : 'PAYG ') + ($('niche').value || 'Rambitious') + ' $' + price);
+    const resp = await jsonp(`${APPS_SCRIPT_URL}?action=createPlan&price=${price}&label=${label}`);
+    if (resp && resp.ok && resp.link) { $('whop').value = resp.link; setStatus('✓ Plan created: ' + resp.plan_id, 'ok'); }
+    else setStatus('Whop error: ' + (resp && resp.error || 'unknown') + ' — paste a link manually.', 'err');
+  } catch (e) {
+    setStatus('Could not reach Apps Script (' + e.message + '). Paste a Whop link manually.', 'err');
+  }
+  $('mintBtn').disabled = false;
+});
+function setStatus(msg, cls){ const el = $('mintStatus'); el.textContent = msg; el.className = 'status ' + (cls||''); }
+
+/* Generate the client link */
+$('genBtn').addEventListener('click', () => {
+  const d = deal();
+  if (!d.upfront) { setStatus('Set a price first.', 'err'); return; }
+  const link = `${AGREEMENT_URL}?t=${encodeToken(d)}`;
+  $('clientLink').value = link;
+  $('out').classList.add('show');
+  $('out').scrollIntoView({ behavior: 'smooth' });
+});
+
+function copy(id, btn){
+  const el = $(id); el.select(); document.execCommand('copy');
+  const t = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = t, 1400);
+}
+
+syncFields();
+</script>
+</body>
+</html>

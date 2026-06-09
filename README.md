@@ -4,15 +4,20 @@ One-click deal links. You pick **Pay-in-Full** or **Pay-as-you-go** + the prices
 generate, and get a single link on your domain. It mints the Whop checkout and the
 agreement page **adapts itself** (contract text, PDF, and emails) from a token in the URL.
 
-## Flow
-1. **You** open `generator.html`, choose PIF/PAYG, set the price(s), click **Mint via Whop**
-   (creates the checkout) → **Generate client link**.
-2. **Client** opens `rambitiousmedia.com/agreement?t=<token>` → the agreement renders the
-   matching deal → they enter name + business + signature → a PDF (with their signature,
-   name, business, date burned in) saves to your Drive + emails both of you.
-3. After signing they're sent to the **Whop checkout** to pay.
+## Flow (pay-first, token rides the URL)
+1. **You** open `generator.html`, choose PIF/PAYG, set the price(s), attach a Whop checkout
+   link (paste, or one-click auto-create once the Worker is live) → **Generate link** →
+   you get `rambitiousmedia.com/pay?t=<token>`.
+2. **Client** opens `/pay?t=…` → it **embeds the Whop checkout** for that price right on the
+   page → they **pay**.
+3. Whop returns them to **`/agreement-page?t=<same token>`** → the agreement **auto-adapts**
+   to the deal you declared → they sign → a PDF (signature + name + business + date burned in)
+   saves to your Drive + emails both of you.
 
-No new infra — same GHL page + Google Apps Script + Whop you already run.
+The token is in the URL the whole way (with a localStorage backup). No global Whop redirect
+setting needed — the embed bakes the return URL per-checkout.
+
+GHL pages: paste `agreement.html` → `/agreement-page`, `pay.html` → `/pay`.
 
 ## Files
 | File | Where it goes |

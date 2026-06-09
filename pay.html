@@ -3,41 +3,76 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Redirecting to secure checkout…</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>Complete your payment — Rambitious Media</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- Whop embedded checkout loader -->
+<script async defer src="https://js.whop.com/static/checkout/loader.js"></script>
 <style>
-  body{font-family:'Inter',system-ui,sans-serif;background:#0a0b10;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0}
-  .box{text-align:center}
-  .spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:#B57BFF;border-radius:50%;margin:0 auto 16px;animation:s 0.8s linear infinite}
+  *{box-sizing:border-box}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0a0b10;color:#fff;margin:0;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
+  .wrap{width:min(560px,100%)}
+  .head{text-align:center;margin-bottom:22px}
+  .ey{font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;font-weight:600}
+  h1{font-size:24px;font-weight:800;margin:8px 0 6px;letter-spacing:-.02em}
+  .sub{font-size:14px;opacity:.85;line-height:1.5}
+  #checkout{background:#fff;border-radius:16px;overflow:hidden;min-height:220px}
+  .load{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px;color:#0a0b10}
+  .spin{width:30px;height:30px;border:3px solid rgba(0,0,0,.15);border-top-color:#7B5BFF;border-radius:50%;animation:s .8s linear infinite}
   @keyframes s{to{transform:rotate(360deg)}}
-  .t{font-size:14px;opacity:.8}
-  a{color:#B57BFF}
+  .err{margin-top:16px;color:#ff8a8a;font-size:14px;text-align:center;line-height:1.5}
+  .step{margin-top:18px;text-align:center;font-size:12.5px;opacity:.6}
 </style>
 </head>
 <body>
-<div class="box">
-  <div class="spin"></div>
-  <div class="t" id="msg">Taking you to secure checkout…</div>
+<div class="wrap">
+  <div class="head">
+    <div class="ey">Rambitious Media</div>
+    <h1>Complete your payment</h1>
+    <div class="sub" id="sub">Secure checkout. You'll sign your agreement immediately after.</div>
+  </div>
+  <div id="checkout"><div class="load"><div class="spin"></div>Loading secure checkout…</div></div>
+  <div class="err" id="err"></div>
+  <div class="step">Step 1 of 2 · Pay → Sign</div>
 </div>
 <script>
-/* PAY-FIRST step: stash the deal (so the agreement can read it back after Whop),
-   then send the client to the Whop checkout. After paying, Whop returns them to
-   /agreement, which reads the stashed deal and renders the contract to sign. */
 (function(){
   function decode(t){
     try { return JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))); }
     catch(e){ return null; }
   }
+  function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+  var box = document.getElementById('checkout');
+  var err = document.getElementById('err');
+
   var t = new URLSearchParams(location.search).get('t');
   var deal = t ? decode(t) : null;
-  if (deal) {
-    try { localStorage.setItem('rmb_deal', JSON.stringify(deal)); } catch(e){}
-    if (deal.whop) { location.replace(deal.whop); return; }
+  if (!deal){ box.innerHTML=''; err.textContent='This link is invalid or expired — please contact us for a new one.'; return; }
+
+  // Backup: stash the deal so the agreement still adapts even if the return URL drops the token.
+  try { localStorage.setItem('rmb_deal', JSON.stringify(deal)); } catch(e){}
+
+  document.getElementById('sub').textContent = deal.type === 'pif'
+    ? ('$' + fmt(deal.upfront) + ' · ' + deal.estimates + ' qualified estimates · sign right after payment')
+    : ('$' + fmt(deal.upfront) + ' upfront · sign right after payment');
+
+  // After paying, Whop returns them to the agreement page WITH the same token → it auto-adapts.
+  var returnUrl = 'https://www.rambitiousmedia.com/agreement-page?t=' + encodeURIComponent(t);
+  var planId = (String(deal.whop||'').match(/(plan_[A-Za-z0-9]+)/) || [])[1];
+
+  if (!planId){
+    // The deal has no embeddable Whop plan link. Fall back to the raw checkout (localStorage carries the deal back).
+    if (deal.whop){ location.replace(deal.whop); }
+    else { box.innerHTML=''; err.textContent='This link is missing its checkout. Please contact us.'; }
+    return;
   }
-  // No checkout link on the deal → just go sign (collect agreement, pay arranged separately).
-  var to = 'https://www.rambitiousmedia.com/agreement-page' + (t ? ('?t=' + encodeURIComponent(t)) : '');
-  document.getElementById('msg').innerHTML = 'Opening your agreement… <a href="' + to + '">continue</a>';
-  location.replace(to);
+
+  // Mount Whop's embedded checkout with the token baked into the return URL.
+  box.innerHTML = '';
+  var el = document.createElement('div');
+  el.setAttribute('data-whop-checkout-plan-id', planId);
+  el.setAttribute('data-whop-checkout-return-url', returnUrl);
+  el.setAttribute('data-whop-checkout-theme', 'light');
+  box.appendChild(el);
 })();
 </script>
 </body>

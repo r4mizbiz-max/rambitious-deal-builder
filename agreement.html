@@ -697,10 +697,14 @@ const SUCCESS_REDIRECT_URL = 'https://www.rambitiousmedia.com/urin';
 function decodeToken(){
   try{
     const t = new URLSearchParams(location.search).get('t');
-    if(!t) return null;
-    const b64 = t.replace(/-/g,'+').replace(/_/g,'/');
-    return JSON.parse(decodeURIComponent(escape(atob(b64))));
-  }catch(e){ console.warn('bad deal token', e); return null; }
+    if(t){
+      const b64 = t.replace(/-/g,'+').replace(/_/g,'/');
+      return JSON.parse(decodeURIComponent(escape(atob(b64))));
+    }
+  }catch(e){ console.warn('bad deal token', e); }
+  // PAY-FIRST: the /pay page stashed the deal before sending them to the Whop checkout.
+  try{ const s = localStorage.getItem('rmb_deal'); if(s) return JSON.parse(s); }catch(e){}
+  return null;
 }
 const DEAL   = decodeToken();
 const IS_PIF  = !!(DEAL && DEAL.type === 'pif');
@@ -1369,9 +1373,9 @@ submitBtn.addEventListener('click', async () => {
     // Brief delay so the browser actually flushes the request before navigating
     await new Promise(r => setTimeout(r, 600));
 
-    // ── After signing: send them to the Whop checkout to PAY (tokened deals),
-    //    otherwise the thank-you page (legacy flow / no checkout link).
-    window.location.href = (DEAL && DEAL.whop) ? DEAL.whop : SUCCESS_REDIRECT_URL;
+    // ── Pay-first flow: they already paid via Whop before signing, so just finish.
+    try { localStorage.removeItem('rmb_deal'); } catch(e){}
+    window.location.href = SUCCESS_REDIRECT_URL;
   } catch (e) {
     console.error('Submission error:', e);
     submitBtn.disabled = false;

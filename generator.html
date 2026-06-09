@@ -75,8 +75,12 @@
     </div>
     <div class="f">
       <label>Whop checkout link <span style="text-transform:none;font-weight:500">(optional)</span></label>
-      <input id="whop" type="text" placeholder="https://whop.com/checkout/plan_…">
-      <div class="hint">Make the plan once in Whop for this price, paste its checkout link here. The generator remembers your last link per deal type. Leave blank to just collect the signed agreement (no auto-redirect to pay).</div>
+      <div class="linkrow">
+        <input id="whop" type="text" placeholder="https://whop.com/checkout/plan_…">
+        <button type="button" id="mintBtn" class="hide">Auto-create</button>
+      </div>
+      <div class="status" id="mintStatus"></div>
+      <div class="hint">Once the minter is live, hit <b>Auto-create</b> to generate the checkout for this price automatically. Until then, make the plan in Whop and paste its link (remembered per deal type).</div>
     </div>
 
     <div class="pre" id="preview"></div>
@@ -86,7 +90,7 @@
     <div class="out" id="out">
       <label>Send this to the client</label>
       <div class="linkrow"><input id="clientLink" readonly><button type="button" onclick="copy('clientLink',this)">Copy</button></div>
-      <div class="hint">They open it → review &amp; sign the adapted agreement → get sent to the Whop checkout to pay. The signed PDF lands in your Drive + both inboxes.</div>
+      <div class="hint">They open it → <b>pay</b> via the Whop checkout → <b>sign</b> the adapted agreement. The signed PDF lands in your Drive + both inboxes.</div>
     </div>
 
   </div>
@@ -110,7 +114,7 @@ document.getElementById('gateBtn').addEventListener('click', tryGate);
 document.getElementById('gatePw').addEventListener('keydown', e => { if (e.key === 'Enter') tryGate(); });
 
 /* ════════ CONFIG ════════ */
-const AGREEMENT_URL = 'https://www.rambitiousmedia.com/agreement';
+const PAY_URL = 'https://www.rambitiousmedia.com/pay';   // pay-first redirector → Whop → /agreement
 
 let TYPE = 'pif';
 const $ = id => document.getElementById(id);
@@ -169,11 +173,30 @@ function whopKey(){ return 'rmb_whop_' + TYPE; }
 function loadWhop(){ $('whop').value = localStorage.getItem(whopKey()) || ''; }
 $('whop').addEventListener('input', () => localStorage.setItem(whopKey(), $('whop').value.trim()));
 
+/* Auto-create the Whop checkout via the Cloudflare Worker (set WORKER_URL after deploy). */
+const WORKER_URL = '';   // ← filled in once the minter Worker is live
+function setStatus(m, c){ const el = $('mintStatus'); el.textContent = m; el.className = 'status ' + (c||''); }
+if (WORKER_URL) $('mintBtn').classList.remove('hide');
+$('mintBtn').addEventListener('click', async () => {
+  const price = Number($('upfront').value || 0);
+  if (!price) return setStatus('Set a price first.', 'err');
+  setStatus('Creating Whop checkout…', '');
+  $('mintBtn').disabled = true;
+  try {
+    const label = encodeURIComponent((TYPE === 'pif' ? 'PIF ' : 'PAYG ') + ($('niche').value || 'Rambitious') + ' $' + price);
+    const r = await fetch(`${WORKER_URL}?price=${price}&label=${label}`);
+    const resp = await r.json();
+    if (resp.ok && resp.link) { $('whop').value = resp.link; localStorage.setItem(whopKey(), resp.link); setStatus('✓ ' + resp.plan_id, 'ok'); }
+    else setStatus('Whop: ' + (resp.error || 'error'), 'err');
+  } catch (e) { setStatus('Failed: ' + e.message, 'err'); }
+  $('mintBtn').disabled = false;
+});
+
 /* Generate the client link */
 $('genBtn').addEventListener('click', () => {
   const d = deal();
   if (!d.upfront) { setStatus('Set a price first.', 'err'); return; }
-  const link = `${AGREEMENT_URL}?t=${encodeToken(d)}`;
+  const link = `${PAY_URL}?t=${encodeToken(d)}`;
   $('clientLink').value = link;
   $('out').classList.add('show');
   $('out').scrollIntoView({ behavior: 'smooth' });

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Redirecting to secure checkout…</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body{font-family:'Inter',system-ui,sans-serif;background:#0a0b10;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0}
+  .box{text-align:center}
+  .spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:#B57BFF;border-radius:50%;margin:0 auto 16px;animation:s 0.8s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .t{font-size:14px;opacity:.8}
+  a{color:#B57BFF}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spin"></div>
+  <div class="t" id="msg">Taking you to secure checkout…</div>
+</div>
+<script>
+/* PAY-FIRST step: stash the deal (so the agreement can read it back after Whop),
+   then send the client to the Whop checkout. After paying, Whop returns them to
+   /agreement, which reads the stashed deal and renders the contract to sign. */
+(function(){
+  function decode(t){
+    try { return JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))); }
+    catch(e){ return null; }
+  }
+  var t = new URLSearchParams(location.search).get('t');
+  var deal = t ? decode(t) : null;
+  if (deal) {
+    try { localStorage.setItem('rmb_deal', JSON.stringify(deal)); } catch(e){}
+    if (deal.whop) { location.replace(deal.whop); return; }
+  }
+  // No checkout link on the deal → just go sign (collect agreement, pay arranged separately).
+  var to = 'https://www.rambitiousmedia.com/agreement' + (t ? ('?t=' + encodeURIComponent(t)) : '');
+  document.getElementById('msg').innerHTML = 'Opening your agreement… <a href="' + to + '">continue</a>';
+  location.replace(to);
+})();
+</script>
+</body>
+</html>

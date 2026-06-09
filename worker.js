@@ -52,6 +52,7 @@ export default {
           initial_price: price,
           base_currency: 'usd',
           visibility: 'quick_link',
+          unlimited_stock: true,
           internal_notes: label,
         }),
       });

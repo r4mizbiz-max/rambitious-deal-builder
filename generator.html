@@ -71,8 +71,9 @@
     </div>
     <div class="grid">
       <div class="f" id="daysWrap"><label>Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
-      <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
+      <div class="f"><label>Number of signers</label><select id="signers"><option value="1">1 — single signer (Full Name)</option><option value="2">2 — Partner 1 &amp; Partner 2</option></select></div>
     </div>
+    <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
     <div class="f">
       <label>Whop checkout link <span style="text-transform:none;font-weight:500">(optional)</span></label>
       <div class="linkrow">
@@ -145,6 +146,7 @@ function deal(){
     estimates: Number($('estimates').value || 0),
     minDaily: Number($('minDaily').value || 0),
     days: Number($('days').value || 0),
+    signers: Number($('signers').value || 1),
     niche: $('niche').value.trim(),
     whop: $('whop').value.trim(),
   };

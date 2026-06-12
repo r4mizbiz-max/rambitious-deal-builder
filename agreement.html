@@ -1,1398 +1,388 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rambitious Media — Service Agreement</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --gradient: linear-gradient(135deg, #7B5BFF 0%, #B57BFF 35%, #F580B8 70%, #FF9A6B 100%);
-      --black: #07080C;
-      --off-black: #0B0D14;
-      --card: #11141C;
-      --border: #1E2330;
-      --border2: #2A3041;
-      --white: #FFFFFF;
-      --muted: #6B7387;
-      --muted2: #98A0B5;
-      --accent: #B57BFF;
-      --accent2: #F580B8;
-      --accent-dim: rgba(181, 123, 255, 0.12);
-      --paper: #FAFAF7;
-      --paper-text: #1A1D26;
-      --paper-muted: #5A6172;
-      --paper-border: #E4E2DC;
-    }
-
-    html, body {
-      background: var(--black);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 60% 70% at 80% 20%, rgba(181,123,255,0.10) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 20% 90%, rgba(255,154,107,0.06) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .page {
-      position: relative;
-      z-index: 1;
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 56px 24px 80px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 48px;
-    }
-
-    .brand {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 18px;
-      letter-spacing: -0.01em;
-    }
-
-    .brand span {
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .stepper {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-
-    .stepper .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--border2);
-    }
-
-    .stepper .dot.active {
-      background: var(--accent2);
-      box-shadow: 0 0 12px var(--accent2);
-    }
-
-    .step { display: none; opacity: 0; transform: translateY(16px); transition: opacity .4s, transform .4s; }
-    .step.active { display: block; opacity: 1; transform: translateY(0); }
-
-    /* ───── STEP 1: Niche ───── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--accent-dim);
-      border: 1px solid rgba(181,123,255,0.28);
-      border-radius: 100px;
-      padding: 6px 14px;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent2);
-      margin-bottom: 24px;
-    }
-
-    .badge::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent2);
-    }
-
-    .h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(36px, 5vw, 56px);
-      line-height: 1.0;
-      letter-spacing: -0.025em;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-
-    .h1 span {
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .lede {
-      font-size: 15px;
-      color: var(--muted2);
-      line-height: 1.6;
-      max-width: 580px;
-      margin-bottom: 40px;
-    }
-
-    .niche-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-bottom: 32px;
-    }
-    @media (min-width: 900px) {
-      .niche-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .niche-card {
-      background: linear-gradient(135deg, var(--card) 0%, #0F1219 100%);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 22px 20px;
-      cursor: pointer;
-      text-align: left;
-      color: var(--white);
-      font-family: inherit;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .niche-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(181,123,255,0.15);
-    }
-
-    .niche-card.selected {
-      border-color: var(--accent2);
-      background: linear-gradient(135deg, rgba(181,123,255,0.12) 0%, rgba(245,128,184,0.06) 100%);
-      box-shadow: 0 0 0 1px var(--accent2), 0 16px 40px rgba(181,123,255,0.25);
-    }
-
-    .niche-card.selected::after {
-      content: '✓';
-      position: absolute;
-      top: 14px; right: 14px;
-      width: 22px; height: 22px;
-      background: var(--gradient);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .niche-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: rgba(181,123,255,0.10);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-
-    .niche-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke: var(--accent2);
-      fill: none;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .niche-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.005em;
-      margin-bottom: 4px;
-    }
-
-    .niche-rate {
-      font-size: 12px;
-      color: var(--muted2);
-    }
-
-    .niche-rate strong {
-      color: var(--accent2);
-      font-weight: 600;
-    }
-
-    .footnote {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.6;
-      max-width: 720px;
-      margin-bottom: 32px;
-    }
-
-    /* ───── BUTTONS ───── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-      background: var(--gradient);
-      color: white;
-      box-shadow: 0 8px 24px rgba(181,123,255,0.3);
-    }
-
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 32px rgba(181,123,255,0.4); }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--muted2);
-      border: 1px solid var(--border2);
-    }
-    .btn-ghost:hover { color: var(--white); border-color: var(--accent); }
-
-    /* ───── STEP 2: Contract ───── */
-    .contract-layout {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 32px;
-      align-items: start;
-    }
-
-    @media (max-width: 900px) {
-      .contract-layout { grid-template-columns: 1fr; }
-    }
-
-    .paper {
-      background: var(--paper);
-      color: var(--paper-text);
-      border-radius: 12px;
-      padding: 56px 56px 40px;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      line-height: 1.6;
-      max-height: 720px;
-      overflow-y: auto;
-    }
-
-    .paper::-webkit-scrollbar { width: 8px; }
-    .paper::-webkit-scrollbar-track { background: transparent; }
-    .paper::-webkit-scrollbar-thumb { background: var(--paper-border); border-radius: 4px; }
-
-    .paper h2 {
-      font-family: 'Syne', sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 4px;
-    }
-
-    .paper .doc-meta {
-      font-size: 11px;
-      color: var(--paper-muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 500;
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--paper-border);
-    }
-
-    .paper h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin: 24px 0 8px;
-      color: var(--paper-text);
-    }
-
-    .paper h4 {
-      font-size: 13px;
-      font-weight: 700;
-      margin: 16px 0 6px;
-    }
-
-    .paper p { margin-bottom: 10px; }
-    .paper ul, .paper ol { margin: 8px 0 12px 20px; }
-    .paper li { margin-bottom: 4px; }
-
-    .paper .rate-highlight {
-      background: linear-gradient(135deg, rgba(123,91,255,0.10), rgba(245,128,184,0.10));
-      padding: 14px 16px;
-      border-radius: 8px;
-      border-left: 3px solid var(--accent);
-      margin: 12px 0;
-      font-weight: 500;
-    }
-
-    .paper .rate-highlight strong { color: var(--accent); }
-
-    /* ───── SIGN PANEL ───── */
-    .sign-panel {
-      background: linear-gradient(135deg, var(--card) 0%, #0F1219 100%);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
-      position: sticky;
-      top: 24px;
-    }
-
-    .sign-panel h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .sign-panel .sub {
-      font-size: 12px;
-      color: var(--muted2);
-      margin-bottom: 22px;
-    }
-
-    .field { margin-bottom: 16px; }
-    .field label {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .field input {
-      width: 100%;
-      padding: 12px 14px;
-      background: var(--off-black);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--white);
-      font-family: inherit;
-      font-size: 14px;
-      transition: border 0.15s ease;
-    }
-    .field input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .sig-wrap {
-      background: var(--off-black);
-      border: 1px dashed var(--border2);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 6px;
-      position: relative;
-    }
-    canvas#sigPad { display: block; width: 100%; height: 140px; touch-action: none; }
-    .sig-clear {
-      position: absolute;
-      top: 8px; right: 8px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border2);
-      color: var(--muted2);
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .sig-clear:hover { color: var(--white); }
-    .sig-hint { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
-
-    .agree-box {
-      background: var(--off-black);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 18px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      cursor: pointer;
-    }
-    .agree-box input[type="checkbox"] {
-      margin-top: 3px;
-      accent-color: var(--accent);
-      width: 16px; height: 16px;
-      flex-shrink: 0;
-    }
-    .agree-box span { font-size: 12px; color: var(--muted2); line-height: 1.5; }
-    .agree-box span strong { color: var(--white); }
-
-    .selected-summary {
-      background: var(--accent-dim);
-      border: 1px solid rgba(181,123,255,0.25);
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      font-size: 12px;
-      color: var(--muted2);
-    }
-    .selected-summary strong { color: var(--accent2); }
-
-    /* ───── STEP 3: Success ───── */
-    .success-card {
-      max-width: 540px;
-      margin: 80px auto;
-      text-align: center;
-      background: linear-gradient(135deg, var(--card) 0%, #0F1219 100%);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 48px 40px;
-      position: relative;
-      overflow: hidden;
-    }
-    .success-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: var(--gradient);
-    }
-    .check-circle {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      background: var(--gradient);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      box-shadow: 0 12px 32px rgba(181,123,255,0.35);
-    }
-    .check-circle svg { width: 28px; height: 28px; stroke: white; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-    .success-card h1 { font-family: 'Syne', sans-serif; font-size: 32px; margin-bottom: 12px; }
-    .success-card p { font-size: 14px; color: var(--muted2); line-height: 1.7; margin-bottom: 24px; }
-
-    /* ───── ERROR ───── */
-    .error-banner {
-      background: rgba(255,80,80,0.12);
-      border: 1px solid rgba(255,80,80,0.3);
-      color: #FFB0B0;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .error-banner.show { display: block; }
-
-    /* ───── LOADING ───── */
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .nav-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 768px) {
-      .page { padding: 24px 14px 80px; }
-      .paper { padding: 28px 20px; max-height: none; }
-      .topbar { margin-bottom: 20px; }
-
-      .badge { margin-bottom: 14px; padding: 5px 11px; font-size: 10px; }
-      .h1 { font-size: 30px !important; line-height: 1.05; margin-bottom: 10px; }
-      .lede { font-size: 13px !important; line-height: 1.5; margin-bottom: 18px !important; }
-      .footnote { font-size: 11px; margin-bottom: 18px; }
-
-      /* FORCE 2-column compact niche grid on mobile */
-      .niche-grid {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        margin-bottom: 16px !important;
-      }
-      .niche-card { padding: 12px 12px 13px !important; border-radius: 12px !important; }
-      .niche-icon {
-        width: 28px !important;
-        height: 28px !important;
-        border-radius: 7px !important;
-        margin-bottom: 8px !important;
-      }
-      .niche-icon svg { width: 16px !important; height: 16px !important; stroke-width: 2 !important; }
-      .niche-name { font-size: 12.5px !important; line-height: 1.2 !important; margin-bottom: 2px !important; }
-      .niche-rate { font-size: 10.5px !important; }
-      .niche-card.selected::after {
-        top: 8px !important; right: 8px !important;
-        width: 16px !important; height: 16px !important;
-        font-size: 9px !important;
-      }
-
-      #step1 .nav-row {
-        position: sticky;
-        bottom: 0;
-        background: linear-gradient(180deg, transparent 0%, var(--black) 30%);
-        padding: 12px 14px 8px;
-        margin: 0 -14px -80px;
-        z-index: 10;
-      }
-      #step1 .btn-primary { width: 100%; padding: 14px 20px; font-size: 14px; }
-
-      .sign-panel { padding: 22px 18px; }
-      .btn { padding: 12px 20px; font-size: 13px; }
-    }
-
-    @media (max-width: 380px) {
-      .h1 { font-size: 26px !important; }
-      .niche-card { padding: 10px !important; }
-      .niche-name { font-size: 12px !important; }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rambitious Media — Service Agreement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--ink:#0f1320;--ink2:#3a4055;--mut:#6b7280;--line:#e5e7eb;--soft:#f7f8fa;--navy:#1f3a5f;--accent:#1f3a5f;--err:#c0392b}
+  html,body{background:#eef0f4;color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  body{padding:36px 16px 90px;line-height:1.55}
+  .wrap{max-width:820px;margin:0 auto}
+  .topbrand{display:flex;align-items:center;gap:10px;margin-bottom:18px;color:#fff}
+  .paper{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px -24px rgba(0,0,0,.25);overflow:hidden}
+  .dochead{padding:40px 44px 26px;border-bottom:3px solid var(--navy)}
+  .dochead .k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);font-weight:700}
+  .dochead h1{font-size:34px;font-weight:800;letter-spacing:-.01em;color:var(--navy);margin-top:8px}
+  .dochead .sub{font-size:15px;color:var(--mut);font-style:italic;margin-top:4px}
+  .summary{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .summary .pill{font-size:12px;font-weight:600;color:#234;background:#eef3fa;border:1px solid #d7e3f2;padding:6px 11px;border-radius:999px}
+  .doc{padding:18px 44px 8px;font-size:14px;color:var(--ink2)}
+  .doc h2{font-size:16px;font-weight:800;color:var(--navy);letter-spacing:.01em;margin:26px 0 4px;padding-bottom:6px;border-bottom:1.5px solid var(--navy);text-transform:uppercase}
+  .doc h3{font-size:14.5px;font-weight:700;color:var(--ink);margin:18px 0 6px}
+  .doc p{margin:9px 0;line-height:1.6}
+  .doc ul{margin:8px 0 8px 4px;list-style:none}
+  .doc li{position:relative;padding:5px 0 5px 18px;line-height:1.55}
+  .doc li::before{content:"•";position:absolute;left:2px;color:var(--navy);font-weight:700}
+  .doc .sub-li{padding-left:22px}
+  .doc table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  .doc table th{background:var(--navy);color:#fff;text-align:left;padding:10px 12px;font-weight:700}
+  .doc table td{border:1px solid var(--line);padding:10px 12px;vertical-align:top}
+  .doc b{color:var(--ink)}
+  /* form */
+  .form{padding:8px 44px 40px}
+  .fh{font-size:16px;font-weight:800;color:var(--navy);text-transform:uppercase;border-bottom:1.5px solid var(--navy);padding-bottom:6px;margin:22px 0 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+  .field input{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px;color:var(--ink)}
+  .field input:focus{outline:none;border-color:var(--navy)}
+  .signer-card{border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;background:var(--soft)}
+  .signer-card .st{font-size:13px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+  .sigwrap{border:1.5px dashed #c7ccd6;border-radius:10px;background:#fff;position:relative;margin-top:4px}
+  canvas.sigpad{display:block;width:100%;height:130px;touch-action:none;border-radius:10px}
+  .sigclear{position:absolute;top:8px;right:10px;font-size:11px;color:var(--mut);background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
+  .agree{display:flex;gap:10px;align-items:flex-start;margin:18px 0;font-size:13.5px;color:var(--ink2)}
+  .agree input{margin-top:3px;width:17px;height:17px;accent-color:var(--navy);flex:0 0 17px}
+  .submit{width:100%;padding:16px;border:none;border-radius:12px;background:var(--navy);color:#fff;font-weight:700;font-size:16px;cursor:pointer;font-family:inherit}
+  .submit:disabled{opacity:.6;cursor:not-allowed}
+  .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .errbar{background:#fdecea;border:1px solid #f5c6c0;color:var(--err);padding:11px 14px;border-radius:10px;font-size:13.5px;margin:12px 0;display:none}
+  .errbar.show{display:block}
+  .badtoken{max-width:560px;margin:80px auto;text-align:center;color:var(--mut)}
+  .foot-note{font-size:12px;color:var(--mut);text-align:center;margin-top:18px}
+</style>
 </head>
 <body>
-<div class="page">
-
-  <div class="topbar">
-    <div class="brand">Rambitious <span>Media</span></div>
-    <div class="stepper">
-      <span id="dot1" class="dot active"></span>
-      <span id="dot2" class="dot"></span>
-      <span id="dot3" class="dot"></span>
-    </div>
+<div class="wrap" id="root">
+  <div class="badtoken" id="bad" style="display:none">
+    <h2 style="color:#1f3a5f">Agreement link invalid</h2>
+    <p style="margin-top:10px">This signing link is missing or expired. Please contact Rambitious Media for a new one.</p>
   </div>
 
-  <!-- ─── STEP 1: NICHE ─── -->
-  <section id="step1" class="step active">
-    <div class="badge">Step 1 of 2</div>
-    <h1 class="h1">Which type of <span>appointments</span> are you getting?</h1>
-    <p class="lede">Select the primary niche your campaign will target. The agreement is a flat $997 upfront one-time fee plus $175 per showed appointment, the same across all niches. You can run additional niches later — just let your account manager know.</p>
-
-    <div class="niche-grid" id="nicheGrid"></div>
-
-    <p class="footnote">$997 is paid one time at signing. $175 per showed appointment is billed automatically as each appointment shows. No monthly subscription. The per-appointment fee is subject to change with at least 7 days written notice.</p>
-
-    <div class="nav-row">
-      <button class="btn btn-primary" id="toStep2" disabled>Continue to Agreement →</button>
-    </div>
-  </section>
-
-  <!-- ─── STEP 2: CONTRACT ─── -->
-  <section id="step2" class="step">
-    <div class="badge">Step 2 of 2</div>
-    <h1 class="h1">Review &amp; <span>Sign</span> Agreement</h1>
-    <p class="lede">Take a moment to read through. Fill in your details, sign at the bottom, and submit. A signed copy will be emailed to you immediately.</p>
-
-    <div class="contract-layout">
-      <div class="paper" id="paper">
-        <!-- Contract injected by JS -->
+  <div id="app" style="display:none">
+    <div class="paper">
+      <div class="dochead">
+        <div class="k">Rambitious Media</div>
+        <h1>Service Agreement</h1>
+        <div class="sub">Guaranteed Appointment Delivery Program</div>
+        <div class="summary" id="summary"></div>
       </div>
+      <div class="doc" id="doc"></div>
 
-      <div class="sign-panel">
-        <h3>Your Signature</h3>
-        <div class="sub">All fields required</div>
-
-        <div class="selected-summary" id="selectedSummary"></div>
-
-        <div class="error-banner" id="errorBanner"></div>
-
-        <div class="field">
-          <label for="businessName">Business Name</label>
-          <input type="text" id="businessName" autocomplete="organization" />
+      <div class="form">
+        <div class="fh">Customer Information</div>
+        <div class="errbar" id="err"></div>
+        <div class="grid2">
+          <div class="field"><label>Business Name</label><input id="business" autocomplete="organization"></div>
+          <div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div>
+          <div class="field"><label>Phone</label><input id="phone" autocomplete="tel"></div>
+          <div class="field"><label>Property / Business Address</label><input id="address" autocomplete="street-address"></div>
         </div>
 
-        <div class="field">
-          <label for="fullName">Full Name</label>
-          <input type="text" id="fullName" autocomplete="name" />
-        </div>
+        <div class="fh">Signature<span id="sigPlural"></span></div>
+        <div id="signers"></div>
 
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" autocomplete="email" />
-        </div>
-
-        <div class="field">
-          <label>Sign Below</label>
-          <div class="sig-wrap">
-            <canvas id="sigPad"></canvas>
-            <button type="button" class="sig-clear" id="sigClear">Clear</button>
-          </div>
-          <div class="sig-hint">Use your mouse, finger, or stylus.</div>
-        </div>
-
-        <label class="agree-box">
-          <input type="checkbox" id="agreeCheck" />
-          <span>I have read and agree to the <strong>Rambitious Media Client Services Agreement</strong> above. I confirm I have authority to bind the business named.</span>
-        </label>
-
-        <div class="nav-row">
-          <button class="btn btn-ghost" id="backToStep1">← Back</button>
-          <button class="btn btn-primary" id="submitBtn">
-            <span class="btn-label">Submit &amp; Sign</span>
-          </button>
-        </div>
+        <label class="agree"><input type="checkbox" id="agree"><span>I have read, understood, and agree to be bound by the terms of this Service Agreement. The signature(s), name(s), and details entered above constitute a legally binding electronic signature.</span></label>
+        <button class="submit" id="submit">Sign &amp; Submit Agreement</button>
+        <div class="foot-note">A fully-executed PDF copy will be emailed to you and saved by Rambitious Media.</div>
       </div>
     </div>
-  </section>
-
-  <!-- ─── STEP 3: SUCCESS ─── -->
-  <section id="step3" class="step">
-    <div class="success-card">
-      <div class="check-circle">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <h1>Agreement Signed</h1>
-      <p>Thanks for signing. A copy of your fully-executed agreement has been emailed to you and to the Rambitious team. You'll hear from your account manager shortly to kick things off.</p>
-      <a class="btn btn-primary" href="https://www.rambitiousmedia.com">Back to Rambitious Media</a>
-    </div>
-  </section>
-
+  </div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   ⚙️  CONFIG
-   ═══════════════════════════════════════════════ */
+/* ───────── CONFIG ───────── */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMvap-Yonchi1i52zb4fUnD85yxAFMMf3UKOdzf6ccufcvX-h4Bhcg4va8xVG4XZoxCw/exec';
-const NOTIFY_EMAIL    = 'ram@rambitiousmedia.com';
 const SUCCESS_REDIRECT_URL = 'https://www.rambitiousmedia.com/urin';
+const SUPPLIER = { legal:'RAMBITIOUS LLC', dba:'Rambitious Media', addr:'41690 Enterprise Cir N, Temecula, CA 92592, United States', signer:'Ramiz Qumseya', title:'Founder' };
 
-/* ═══════════════════════════════════════════════
-   DEAL TOKEN — the generator encodes the deal into ?t=<base64url JSON>.
-   This page decodes it and adapts the contract + the PDF + the emails.
-   Token shape: {type:'pif'|'payg', upfront, perAppt, estimates, niche, minDaily, days, whop}
-   No token  → legacy niche flow (kept for back-compat).
-   ═══════════════════════════════════════════════ */
+/* ───────── token ───────── */
 function decodeToken(){
-  try{
-    const t = new URLSearchParams(location.search).get('t');
-    if(t){
-      const b64 = t.replace(/-/g,'+').replace(/_/g,'/');
-      return JSON.parse(decodeURIComponent(escape(atob(b64))));
-    }
-  }catch(e){ console.warn('bad deal token', e); }
-  // PAY-FIRST: the /pay page stashed the deal before sending them to the Whop checkout.
-  try{ const s = localStorage.getItem('rmb_deal'); if(s) return JSON.parse(s); }catch(e){}
+  try{ const t=new URLSearchParams(location.search).get('t'); if(t) return JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))); }catch(e){}
+  try{ const s=localStorage.getItem('rmb_deal'); if(s) return JSON.parse(s); }catch(e){}
   return null;
 }
-const DEAL   = decodeToken();
-const IS_PIF  = !!(DEAL && DEAL.type === 'pif');
-const IS_PAYG = !!(DEAL && DEAL.type === 'payg');
-function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+const DEAL = decodeToken();
+function money(n){ return '$'+Number(n||0).toLocaleString('en-US'); }
+function todayStr(){ return new Date().toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'}); }
 
-/* ───────────────────────────────────────────────
-   NICHES & RATES  (legacy flow only — used when there is no token)
-   ─────────────────────────────────────────────── */
-const UPFRONT_FEE = (DEAL && Number(DEAL.upfront)) || 997;
-const NICHES = [
-  { id: 'bath', name: 'Bathroom / Walk-In Shower', rate: 175, icon: 'shower' },
-  { id: 'sprayfoam', name: 'Spray Foam', rate: 175, icon: 'spray' },
-  { id: 'kitchen', name: 'Kitchen', rate: 175, icon: 'kitchen' },
-  { id: 'hvac', name: 'HVAC', rate: 175, icon: 'hvac' },
-  { id: 'cabinets', name: 'Cabinets', rate: 175, icon: 'cabinet' },
-  { id: 'fencing', name: 'Fencing', rate: 175, icon: 'fence' },
-  { id: 'decks', name: 'Decks', rate: 175, icon: 'deck' },
-  { id: 'painting', name: 'Painting', rate: 175, icon: 'painting' },
-];
-
-const ICONS = {
-  shower: '<svg viewBox="0 0 24 24"><path d="M4 4h11a4 4 0 0 1 4 4v3"/><path d="M4 4v6"/><circle cx="14" cy="16" r="0.5"/><circle cx="11" cy="19" r="0.5"/><circle cx="17" cy="19" r="0.5"/><circle cx="14" cy="22" r="0.5"/><path d="M8 13h12v3a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3z"/></svg>',
-  spray: '<svg viewBox="0 0 24 24"><path d="M9 6V3h6v3"/><rect x="7" y="6" width="10" height="15" rx="2"/><path d="M19 6h2"/><path d="M19 9h2"/><path d="M19 12h2"/></svg>',
-  kitchen: '<svg viewBox="0 0 24 24"><path d="M6 2v6"/><path d="M18 2v6"/><path d="M6 8c-1.7 0-3 1.3-3 3v3h18v-3c0-1.7-1.3-3-3-3"/><path d="M3 14v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M8 18h8"/></svg>',
-  hvac: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M8 20l-1 2"/><path d="M12 20v2"/><path d="M16 20l1 2"/></svg>',
-  cabinet: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="11" y1="7" x2="13" y2="7"/><line x1="11" y1="17" x2="13" y2="17"/></svg>',
-  fence: '<svg viewBox="0 0 24 24"><path d="M4 4l-1 3v14h4V7l-1-3z"/><path d="M11 4l-1 3v14h4V7l-1-3z"/><path d="M18 4l-1 3v14h4V7l-1-3z"/><line x1="3" y1="11" x2="21" y2="11"/><line x1="3" y1="15" x2="21" y2="15"/></svg>',
-  deck: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="3"/><rect x="3" y="10" width="18" height="3"/><rect x="3" y="15" width="18" height="3"/></svg>',
-  painting: '<svg viewBox="0 0 24 24"><path d="M19 11h-6a2 2 0 0 0-2 2v1H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2"/><path d="M19 11V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M11 19h2v3h-2z"/><circle cx="20" cy="14" r="1"/></svg>',
-};
-
-/* ───────────────────────────────────────────────
-   STATE
-   ─────────────────────────────────────────────── */
-const state = {
-  niche: (DEAL && DEAL.niche) || null,
-  rate:  (DEAL && Number(DEAL.perAppt)) || null,
-  businessName: '',
-  fullName: '',
-  email: '',
-  signature: null,
-};
-
-/* All the variant-specific wording lives here, derived from the token. */
-function dealSummaryLine(){
-  if (IS_PIF)  return `<strong>Pay in Full</strong> — $${fmt(DEAL.upfront)} for ${DEAL.estimates} qualified estimates · client-funded ad spend`;
-  if (IS_PAYG) return `<strong>Pay as you go</strong> — $${fmt(DEAL.upfront)} upfront + $${fmt(DEAL.perAppt)} per showed appointment · client-funded ad spend`;
-  return `Selected niche: <strong>${state.niche}</strong> — $${state.rate}/showed appointment + $${UPFRONT_FEE} upfront`;
+/* derive the contract parameters from the deal */
+function params(){
+  const N   = Number(DEAL.estimates)||10;
+  const fee = Number(DEAL.upfront)||0;
+  const per = Number(DEAL.perAppt)>0 ? Number(DEAL.perAppt) : Math.round(fee/Math.max(N,1));
+  const day = Number(DEAL.minDaily)||150;
+  return { N, fee, per, day, week:day*7, period:Number(DEAL.days)||14, signers:(Number(DEAL.signers)===2?2:1) };
 }
-function svcAdSpendClause(){
-  if (!DEAL) return 'b. Operation of advertising campaigns on platforms owned by the Supplier, with no requirement for the Customer to provide ad account access, logins, or payment credentials.';
-  return `b. Operation and ongoing management of advertising campaigns on the Customer's behalf. Advertising spend ("Media Spend") is funded directly by the Customer and paid to the advertising platform. The Supplier deploys, manages, and optimises the Media Spend but does not pay for it. The Customer agrees to maintain a minimum Media Spend of $${fmt(DEAL.minDaily)} per day for the duration of the campaign.`;
-}
-function pifDeliveryClause(){
-  return `h. Delivery Commitment. The Supplier shall deliver ${DEAL.estimates} qualified showed estimates within ${DEAL.days} days of campaign launch, conditional upon the Customer maintaining the minimum Media Spend of $${fmt(DEAL.minDaily)} per day throughout the campaign. No-show and rescheduled appointments do not count toward the ${DEAL.estimates} and are replaced at no additional charge once they show. If the Customer does not maintain the minimum Media Spend, the ${DEAL.days}-day delivery window is extended proportionally.`;
-}
+const P = DEAL ? params() : null;
 
-/* ───────────────────────────────────────────────
-   STEP 1 — Niche grid
-   ─────────────────────────────────────────────── */
-const grid = document.getElementById('nicheGrid');
-NICHES.forEach(n => {
-  const card = document.createElement('button');
-  card.className = 'niche-card';
-  card.dataset.id = n.id;
-  card.innerHTML = `
-    <div class="niche-icon">${ICONS[n.icon]}</div>
-    <div class="niche-name">${n.name}</div>
-    <div class="niche-rate"><strong>$${n.rate}</strong> per showed appointment + $${UPFRONT_FEE} upfront</div>
-  `;
-  card.addEventListener('click', () => selectNiche(n));
-  grid.appendChild(card);
-});
+/* ───────── the contract, as structured blocks (rendered to both HTML + PDF) ───────── */
+function blocks(P){
+  const word = { 10:'ten (10)', 14:'fourteen (14)', 20:'twenty (20)', 31:'thirty-one (31)' };
+  const N = word[P.N] || (P.N+' ('+P.N+')');
+  const D = word[P.period] || (P.period+' ('+P.period+')');
+  return [
+    {h:'Background'},
+    {p:'A. The Supplier provides fully managed lead generation, advertising, and appointment-setting services for contractors operating in the home-improvement and renovation sector.'},
+    {p:'B. The Supplier designs, deploys, manages, and optimises advertising campaigns and operates a quality-assurance verification process for the purpose of delivering Verified Seated Appointments (as defined below) to the Customer.'},
+    {p:'C. Under this Agreement the Supplier offers a guaranteed appointment program whereby the Supplier commits to deliver a minimum number of Verified Seated Appointments within a defined period, subject to the terms set out herein.'},
+    {p:'D. The Customer wishes to engage the Supplier on the terms of this Agreement, and the Supplier agrees to be so engaged.'},
 
-function selectNiche(n) {
-  state.niche = n.name;
-  state.rate = n.rate;
-  document.querySelectorAll('.niche-card').forEach(c => c.classList.toggle('selected', c.dataset.id === n.id));
-  document.getElementById('toStep2').disabled = false;
-}
+    {h:'Schedule 1 — Service Details'},
+    {h3:'1. Services Provided'},
+    {p:'The Supplier shall provide the following services (the "Services"):'},
+    {li:'Design, build, deployment, and ongoing management of a fully managed lead generation and appointment-setting campaign.'},
+    {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+    {li:'Management of the Customer’s advertising spend on the Customer’s behalf, funded by the Customer as set out in Schedule 2.'},
+    {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as appointments.'},
+    {li:'Verification of seated and shown appointments through the Supplier’s quality-assurance process.'},
+    {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
+    {li:'Delivery of appointment details via email, SMS, calendar invitation, and/or client app notification, as applicable.'},
+    {h3:'2. Definition of a Verified Seated Appointment'},
+    {p:'A "Verified Seated Appointment" means a scheduled estimate appointment that satisfies all of the following criteria:'},
+    {li:'(a) the prospect has provided, at minimum, a valid name, phone number, property address, and email address;', sub:1},
+    {li:'(b) the prospect’s property is located within the Customer’s agreed service area;', sub:1},
+    {li:'(c) the prospect is a homeowner and/or an authorised decision-maker for the property, and is not a renter or non-decision-maker;', sub:1},
+    {li:'(d) the prospect’s project comprises a bathroom remodel, shower or tub conversion, or related bathroom renovation;', sub:1},
+    {li:'(e) the prospect attended and was present (in person or, where expressly agreed, virtually) for the scheduled appointment at the agreed date and time — that is, the appointment was both "seated" and "shown"; and', sub:1},
+    {li:'(f) the appointment has been confirmed as seated and shown through the Supplier’s verification process, which may include call recordings, confirmation communications, calendar and booking records, and other reasonable supporting evidence.', sub:1},
+    {p:'Only Verified Seated Appointments count toward the guarantee in Section 3. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, do not count toward the guarantee; the Supplier will continue delivering appointments until the guaranteed number of Verified Seated Appointments is reached, subject to the Guarantee Period.'},
+    {h3:'3. Appointment Guarantee'},
+    {p:'The Supplier guarantees that it will deliver a minimum of '+N+' Verified Seated Appointments to the Customer within '+D+' calendar days of the Campaign Launch Date (the "Guarantee Period").'},
+    {p:'The "Campaign Launch Date" is the date on which the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier. The Guarantee Period shall be paused (tolled) for any period during which the campaign is suspended or paused due to non-payment, late payment, or any cause attributable to the Customer (see Schedule 2).'},
+    {h3:'4. Shortfall — Pro-Rata Refund'},
+    {p:'If, at the end of the Guarantee Period, the Supplier has delivered fewer than '+N+' Verified Seated Appointments, the Supplier shall refund the Customer '+money(P.per)+' for each Verified Seated Appointment not delivered below the guaranteed '+N+'.'},
+    {p:'For the avoidance of doubt, this pro-rata refund applies solely to the prepaid Appointment Package Fee set out in Schedule 2 and constitutes the Customer’s sole and exclusive remedy for any shortfall in the number of Verified Seated Appointments delivered. Advertising spend is paid to third-party advertising platforms and is non-refundable. Any refund due under this Section shall be paid within thirty (30) days following the end of the Guarantee Period.'},
+    {h3:'5. Verification, Disputes & Good Faith'},
+    {p:'Each appointment delivered under this Agreement is independently verified as seated and shown by the Supplier’s quality-assurance team. If the Customer wishes to dispute whether a particular appointment was seated and shown, the Customer must notify the Supplier in writing within forty-eight (48) hours of the scheduled appointment date and time, together with reasonable supporting information. The Supplier will review each timely dispute against its verification evidence and make a determination in good faith.'},
+    {p:'Material breach — false or bad-faith disputes. If the Customer asserts that an appointment was not seated or shown and the Supplier’s verification evidence demonstrates that the appointment was in fact seated and shown, such conduct shall constitute a material breach of this Agreement and of the Customer’s duty of good faith. In that event, the Supplier may, at its sole discretion and with immediate effect, terminate this Agreement and treat all guarantees, services, and obligations of the Supplier under this Agreement as null and void. In such circumstances no refund, credit, or replacement of any kind shall be due to the Customer, and all fees previously paid shall be retained by the Supplier.'},
+    {h3:'6. No Guarantee of Sales or Revenue'},
+    {p:'The Supplier guarantees only the delivery of Verified Seated Appointments as expressly set out in this Agreement. The Supplier does not guarantee, represent, or warrant any particular sales, close rate, conversion rate, contract value, revenue, or return on investment. The Customer is solely responsible for conducting estimates, sales conversations, pricing, follow-up, and the closing of any business.'},
+    {h3:'7. Customer Responsibilities'},
+    {p:'The Customer agrees to:'},
+    {li:'Maintain an active, monitored, and reachable phone number and email address throughout the engagement.'},
+    {li:'Notify the Supplier in writing of any appointment no-shows, cancellations, reschedules, or similar discrepancies within forty-eight (48) hours of the scheduled appointment.'},
+    {li:'Act in good faith with respect to appointment attendance, verification, and any disputes.'},
+    {li:'Not interfere with, alter, pause, or take control of the advertising campaigns, creative, ad accounts, or platform assets managed by the Supplier.'},
+    {p:'Where a prospect attends or is available for a scheduled appointment but the Customer fails to attend, is unreachable, or is otherwise at fault, that appointment shall nonetheless count as a delivered Verified Seated Appointment.'},
 
-/* ───────────────────────────────────────────────
-   STEP TRANSITIONS
-   ─────────────────────────────────────────────── */
-function gotoStep(n) {
-  ['step1','step2','step3'].forEach((id,i) => {
-    document.getElementById(id).classList.toggle('active', i === n-1);
-    document.getElementById(`dot${i+1}`).classList.toggle('active', i <= n-1);
-  });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    {h:'Schedule 2 — Charges & Payment'},
+    {h3:'1. Fee Structure'},
+    {table:[
+      ['Fee Type','Amount'],
+      ['Appointment Package Fee ('+P.N+' Verified Seated Appointments @ '+money(P.per)+' each)', money(P.fee)+' USD — one-time, payable in full on signing'],
+      ['Advertising Spend (funded by the Customer)', money(P.day)+' USD per day, invoiced weekly at '+money(P.week)+' per 7-day period'],
+      ['Per-Appointment Valuation (for shortfall refund calculation)', money(P.per)+' USD per appointment'],
+    ]},
+    {h3:'2. Payment Terms'},
+    {p:'(a) Appointment Package Fee. The Appointment Package Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date. This fee is non-refundable except as expressly provided under the pro-rata refund in Schedule 1, Section 4.'},
+    {p:'(b) Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.'},
+    {p:'(c) Authorisation. The Customer authorises the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.'},
+    {p:'(d) Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of the campaign at the Supplier’s discretion. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.'},
+    {h3:'3. Subsequent Billing Cycles (Renewal)'},
+    {p:'Once the Supplier has delivered the guaranteed '+N+' Verified Seated Appointments, the then-current cycle shall be deemed fulfilled. Continuation into a subsequent cycle, together with continued advertising spend, shall commence only upon the written agreement of both Parties. The Supplier is under no obligation to commence a subsequent cycle, and the Customer is under no obligation to renew.'},
 
-document.getElementById('toStep2').addEventListener('click', () => {
-  if (!state.niche) return;
-  renderContract();
-  document.getElementById('selectedSummary').innerHTML =
-    `Selected niche: <strong>${state.niche}</strong> — $${state.rate}/showed appointment + $${UPFRONT_FEE} upfront`;
-  gotoStep(2);
-  setTimeout(initSigPad, 100);
-});
-
-document.getElementById('backToStep1').addEventListener('click', () => gotoStep(1));
-
-/* ───────────────────────────────────────────────
-   CONTRACT TEMPLATE
-   ─────────────────────────────────────────────── */
-function todayStr() {
-  const d = new Date();
-  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-function renderContract() {
-  const r = state.rate;
-  const html = `
-    <h2>Client Services Agreement</h2>
-    <div class="doc-meta">Date of Agreement: ${todayStr()}</div>
-
-    <h3>Parties</h3>
-    <p><strong>1. Supplier:</strong> Rambitious Media is a brand operated by Rambitious LLC, a company incorporated in the United States. All services are provided by Rambitious LLC, and all contractual and payment obligations are between the client and Rambitious LLC, regardless of any use of the Rambitious Media name in marketing or operations. (Hereinafter referred to as the "Supplier")</p>
-    <p><strong>2. Customer:</strong> The business and individual named in the signature block below. The individual signing this Agreement confirms they have full authority to bind the Customer.</p>
-
-    <h3>Background</h3>
-    <p>A. The Supplier provides appointment-setting and marketing services.</p>
-    <p>B. The Customer agrees to purchase, and the Supplier agrees to provide the Services on the terms set out in this Agreement.</p>
-
-    <h3>Schedule 1 — Service Details</h3>
-
-    <h4>1. Services Provided</h4>
-    <p>a. Development and implementation of an appointment-setting campaign on behalf of the Customer.</p>
-    <p>${svcAdSpendClause()}</p>
-    <p>c. Outbound contact attempts to all qualified leads (calls, SMS, follow-up) for a period of up to fourteen (14) days per lead, with a minimum of two (2) contact attempts per day.</p>
-    <p>d. Booking of qualified prospects directly onto the Customer's calendar via Supplier-managed scheduling system.</p>
-    <p>e. Ongoing optimisation of campaigns where deemed necessary by the Supplier.</p>
-    <p>f. Periodic progress updates via email or telephone where appropriate.</p>
-    <p>g. A showed appointment is defined as a scheduled meeting at which the prospect attends and engages with the Customer for the purpose of receiving an estimate or quote for the Customer's services.</p>
-    ${IS_PIF ? '<p>'+pifDeliveryClause()+'</p>' : ''}
-
-    <h4>2. No-Show &amp; Reschedule Credit</h4>
-    <p>a. The Customer is only charged for appointments that result in a confirmed showed appointment, as defined in Schedule 1, Section 1(g).</p>
-    <p>b. If a scheduled appointment results in a no-show — meaning the prospect fails to attend the scheduled meeting — the Customer shall not be charged, and the Customer's account shall be credited toward one (1) future appointment at no additional cost.</p>
-    <p>c. If a scheduled appointment is rescheduled by the prospect prior to the meeting, the same credit policy applies. The original appointment is not billed, and the rescheduled (or replacement) appointment is provided at no charge once it shows.</p>
-    <p>d. The Customer is responsible for accurately reporting appointment outcomes (showed, no-show, rescheduled) via the Supplier's reporting system within forty-eight (48) hours of each scheduled appointment time. Failure to report within this window will result in the appointment being marked as showed and billed accordingly.</p>
-    <p>e. The Supplier reserves the right to verify reported outcomes through reasonable means, including but not limited to follow-up communication with the prospect.</p>
-
-    <h4>3. Limitation of Liability</h4>
-    <p>a. The Customer acknowledges that performance may be affected by factors outside the Supplier's control, including but not limited to third-party platforms, advertising policies, regulatory changes, market conditions, prospect behaviour, or seasonality.</p>
-    <p>b. The Supplier makes no guarantee regarding the conversion rate of showed appointments into closed sales. Closing rates depend on the Customer's sales process, pricing, and execution.</p>
-    <p>c. The Supplier's total liability under this Agreement shall be limited to the total amount paid by the Customer to the Supplier in the preceding thirty (30) days.</p>
-
-    <h4>4. Customer Responsibilities</h4>
-    <p>The Supplier shall not be liable for delays or underperformance caused by the Customer's failure to provide timely information, approvals, calendar availability, service area details, appointment outcome reporting, or communication.</p>
-
-    <h3>Schedule 2 — Charges, Costs &amp; Payment</h3>
-
-    <h4>Charges</h4>
-    <p>The Customer shall pay the following fees:</p>
-    ${IS_PIF ? `
-      <div class="rate-highlight"><strong>Service Fee:</strong> $${fmt(DEAL.upfront)} USD, paid in full upfront at signing, covering the full acquisition system and the delivery of ${DEAL.estimates} qualified showed estimates. This fee is fully earned upon signing and is non-refundable.</div>
-      <div class="rate-highlight"><strong>Media Spend:</strong> Funded directly by the Customer and paid to the advertising platform (minimum $${fmt(DEAL.minDaily)}/day). The Supplier manages and optimises the Media Spend but does not pay for it.</div>
-      <p>There is no per-appointment fee under this Agreement. The Service Fee covers the delivery of ${DEAL.estimates} qualified showed estimates as described in Schedule 1.</p>
-    ` : IS_PAYG ? `
-      <div class="rate-highlight"><strong>Upfront Service Fee:</strong> $${fmt(DEAL.upfront)} USD, paid one-time upfront at signing. This fee covers campaign setup, ad creative production, and onboarding, and is fully earned upon signing. The Upfront Service Fee is non-refundable.</div>
-      <div class="rate-highlight"><strong>Per-Appointment Fee:</strong> $${fmt(DEAL.perAppt)} USD per showed appointment delivered, billed automatically upon confirmation of a showed appointment.</div>
-      <div class="rate-highlight"><strong>Media Spend:</strong> Funded directly by the Customer and paid to the advertising platform (minimum $${fmt(DEAL.minDaily)}/day). The Supplier manages and optimises the Media Spend but does not pay for it.</div>
-      <p><strong>Per-Appointment Fee — Subject to Change.</strong> The Per-Appointment Fee is subject to change, either upward or downward, based on ad performance, market conditions, or platform cost changes. Any change will be communicated to the Customer in writing at least seven (7) days prior to taking effect. Continued use of the Services after the notice period constitutes acceptance of the revised rate. The Customer may cancel at any time prior to a rate change taking effect without penalty.</p>
-    ` : `
-      <div class="rate-highlight"><strong>Upfront Service Fee:</strong> $997 USD, paid one-time upfront at signing. This fee covers campaign setup, ad creative production, and onboarding, and is fully earned upon signing. The Upfront Service Fee is non-refundable.</div>
-      <div class="rate-highlight"><strong>Per-Appointment Fee:</strong> $${r} USD per showed appointment delivered (selected niche: ${state.niche}), billed automatically upon confirmation of a showed appointment.</div>
-      <p><strong>Per-Appointment Fee — Subject to Change.</strong> The Per-Appointment Fee is subject to change, either upward or downward, based on ad performance, market conditions, or platform cost changes. Any change will be communicated to the Customer in writing (email or in-platform message) at least seven (7) days prior to taking effect. Continued use of the Services after the notice period constitutes acceptance of the revised rate. The Customer may cancel at any time prior to a rate change taking effect without penalty.</p>
-    `}
-
-    <h4>Payment Terms</h4>
-    <p>Payments are billed automatically to the card on file. The $997 Upfront Service Fee is charged in full at the time of signing. Per-Appointment Fees are charged automatically upon confirmation of each showed appointment.</p>
-    <p><strong>Cancellation.</strong> The Customer may cancel at any time. Cancellation requires at least two (2) working days' notice and prevents future Per-Appointment charges only. There are no cancellation fees, no minimum contract term, and no penalties for cancelling. The Upfront Service Fee and all previously billed amounts are non-refundable.</p>
-
-    <h4>Chargebacks &amp; Reversals</h4>
-    <p>The Customer agrees not to initiate any chargeback or payment reversal without first contacting the Supplier in writing to attempt to resolve the matter in good faith.</p>
-    <p>In the event of a dispute, both parties agree to work promptly and reasonably toward a resolution. Initiating a chargeback or payment reversal without prior written notice and a reasonable opportunity to resolve the issue shall constitute a material breach of this Agreement.</p>
-    <p>If a chargeback or payment reversal is initiated by the Customer in violation of this clause, the Supplier reserves the right to: (i) immediately suspend or terminate all Services, and (ii) recover any outstanding amounts owed, including fees associated with the chargeback or reversal, and any reasonable costs incurred in responding to or disputing such action.</p>
-    <p>The Customer acknowledges that all services provided up to the date of any dispute are valid and billable.</p>
-
-    <h3>Use of Client Results</h3>
-    <p>The Customer grants Rambitious LLC the right to use performance results for marketing, promotional, and educational purposes. Confidential information will be excluded unless consented to in writing. This permission survives termination.</p>
-
-    <h3>Governing Law &amp; Jurisdiction</h3>
-    <p>This Agreement shall be governed by and construed in accordance with the laws of the State of California, United States, and any disputes shall be subject to the exclusive jurisdiction of the courts located in California.</p>
-
-    <h3>Signatures</h3>
-    <p>By submitting this form, the Customer signs and agrees to be bound by this Agreement. The signature, date, and identifying details captured below constitute the Customer's electronic signature.</p>
-    <p style="margin-top:24px; color: var(--paper-muted); font-size: 12px;">Signed for and on behalf of Rambitious LLC: <strong>Ramiz Qumseya, Founder</strong> · ${todayStr()}</p>
-  `;
-  document.getElementById('paper').innerHTML = html;
-}
-
-/* ───────────────────────────────────────────────
-   SIGNATURE PAD
-   ─────────────────────────────────────────────── */
-let sigPad;
-function initSigPad() {
-  const canvas = document.getElementById('sigPad');
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas.width = canvas.offsetWidth * ratio;
-  canvas.height = canvas.offsetHeight * ratio;
-  canvas.getContext('2d').scale(ratio, ratio);
-  sigPad = new SignaturePad(canvas, {
-    backgroundColor: 'rgba(0,0,0,0)',
-    penColor: '#FFFFFF',
-    minWidth: 1,
-    maxWidth: 2.2,
-  });
-}
-
-document.getElementById('sigClear').addEventListener('click', () => sigPad && sigPad.clear());
-
-/* Convert white-on-transparent signature → black-on-white for the PDF
-   (pixel-level: read alpha from original strokes, paint black on white bg) */
-function getSignatureForPDF() {
-  if (!sigPad || sigPad.isEmpty()) return null;
-  const original = document.getElementById('sigPad');
-  const w = original.width;
-  const h = original.height;
-  if (!w || !h) return null;
-
-  try {
-    const origCtx = original.getContext('2d');
-    const origPx  = origCtx.getImageData(0, 0, w, h).data;
-
-    const off = document.createElement('canvas');
-    off.width  = w;
-    off.height = h;
-    const offCtx = off.getContext('2d');
-    offCtx.fillStyle = '#FFFFFF';
-    offCtx.fillRect(0, 0, w, h);
-    const outImg = offCtx.getImageData(0, 0, w, h);
-    const outPx  = outImg.data;
-
-    for (let i = 0; i < origPx.length; i += 4) {
-      const a = origPx[i + 3];
-      if (a > 0) {
-        // Stroke pixel — paint black with the same alpha-derived opacity
-        const k = Math.round(255 * (1 - a / 255));
-        outPx[i]     = k;
-        outPx[i + 1] = k;
-        outPx[i + 2] = k;
-        outPx[i + 3] = 255;
-      }
-    }
-    offCtx.putImageData(outImg, 0, 0);
-    return off.toDataURL('image/png');
-  } catch (err) {
-    console.warn('Signature recolor failed, falling back:', err);
-    return null;
-  }
-}
-
-window.addEventListener('resize', () => {
-  if (document.getElementById('step2').classList.contains('active')) {
-    const data = sigPad ? sigPad.toData() : null;
-    initSigPad();
-    if (data) sigPad.fromData(data);
-  }
-});
-
-/* ───────────────────────────────────────────────
-   PDF GENERATION
-   ─────────────────────────────────────────────── */
-function buildPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const PAGE_W = doc.internal.pageSize.getWidth();
-  const PAGE_H = doc.internal.pageSize.getHeight();
-  const M = 56;
-  const MAX_W = PAGE_W - M * 2;
-  let y = M;
-
-  function addPageIfNeeded(needed) {
-    if (y + needed > PAGE_H - M) {
-      doc.addPage();
-      y = M;
-    }
-  }
-
-  function h1(t) {
-    addPageIfNeeded(28);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(20, 20, 20);
-    doc.text(t, M, y);
-    y += 22;
-  }
-
-  function meta(t) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(110, 110, 110);
-    doc.text(t.toUpperCase(), M, y);
-    y += 8;
-    doc.setDrawColor(220, 220, 220);
-    doc.line(M, y, PAGE_W - M, y);
-    y += 16;
-  }
-
-  function h2(t) {
-    addPageIfNeeded(28);
-    y += 14;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11.5);
-    doc.setTextColor(20, 20, 20);
-    doc.text(t.toUpperCase(), M, y);
-    y += 4;
-    doc.setDrawColor(220, 220, 220);
-    doc.line(M, y, M + 30, y);
-    y += 14;
-  }
-
-  function h3(t) {
-    addPageIfNeeded(20);
-    y += 4;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10.5);
-    doc.setTextColor(50, 50, 50);
-    doc.text(t, M, y);
-    y += 14;
-  }
-
-  function p(t, opts = {}) {
-    const indent = opts.indent || 0;
-    const isClause = /^[a-z]\.\s/i.test(t) || /^\([ivx]+\)\s/i.test(t);
-    const useIndent = indent || (isClause ? 18 : 0);
-    doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
-    doc.setFontSize(10.5);
-    doc.setTextColor(40, 40, 40);
-    const lines = doc.splitTextToSize(t, MAX_W - useIndent);
-    lines.forEach(line => {
-      addPageIfNeeded(14);
-      doc.text(line, M + useIndent, y);
-      y += 14;
-    });
-    y += 5;
-  }
-
-  function highlight(label, body) {
-    addPageIfNeeded(40);
-    doc.setFillColor(247, 244, 252);
-    const lines = doc.splitTextToSize(`${label}  ${body}`, MAX_W - 16);
-    const boxH = lines.length * 12 + 14;
-    doc.rect(M, y - 2, MAX_W, boxH, 'F');
-    doc.setDrawColor(123, 91, 255);
-    doc.setLineWidth(2);
-    doc.line(M, y - 2, M, y - 2 + boxH);
-    doc.setLineWidth(0.5);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(40, 40, 40);
-    let lx = M + 10;
-    let ly = y + 10;
-    const labelW = doc.getTextWidth(label);
-    doc.text(label, lx, ly);
-    doc.setFont('helvetica', 'normal');
-    const wrapped = doc.splitTextToSize(body, MAX_W - 16 - labelW - 4);
-    doc.text(wrapped[0] || '', lx + labelW + 4, ly);
-    for (let i = 1; i < wrapped.length; i++) {
-      ly += 12;
-      doc.text(wrapped[i], lx, ly);
-    }
-    // remaining wrapped of full lines if our split logic produced more
-    y += boxH + 6;
-  }
-
-  // ─── Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(123, 91, 255);
-  doc.text('RAMBITIOUS LLC', M, y);
-  y += 18;
-
-  h1('Client Services Agreement');
-  meta(`Date of Agreement: ${todayStr()}`);
-
-  // ─── Customer info card (variant-aware) ───
-  const infoRows = IS_PIF ? [
-    ['Business Name:', state.businessName],
-    ['Full Name:',     state.fullName],
-    ['Email:',         state.email],
-    ['Service:',       `${DEAL.estimates} Qualified Showed Estimates`],
-    ['Service Fee:',   `$${fmt(DEAL.upfront)} USD - paid in full at signing`],
-    ['Ad Spend:',      `Client-funded - min $${fmt(DEAL.minDaily)}/day`],
-    ['Fulfillment:',   `Within ${DEAL.days} days of launch`],
-    ['Signed:',        todayStr()],
-  ] : IS_PAYG ? [
-    ['Business Name:', state.businessName],
-    ['Full Name:',     state.fullName],
-    ['Email:',         state.email],
-    ['Upfront Fee:',   `$${fmt(DEAL.upfront)} USD one-time at signing`],
-    ['Per-Appt Rate:', `$${fmt(DEAL.perAppt)} per showed appointment`],
-    ['Ad Spend:',      `Client-funded - min $${fmt(DEAL.minDaily)}/day`],
-    ['Signed:',        todayStr()],
-  ] : [
-    ['Business Name:', state.businessName],
-    ['Full Name:',     state.fullName],
-    ['Email:',         state.email],
-    ['Selected Niche:', state.niche],
-    ['Upfront Fee:',   `$${UPFRONT_FEE} USD one-time at signing`],
-    ['Per-Appt Rate:', `$${state.rate} per showed appointment`],
-    ['Signed:',        todayStr()],
+    {h:'General Terms'},
+    {h3:'Term & Termination'},
+    {p:'This Agreement commences on the Effective Date and continues until the guaranteed '+N+' Verified Seated Appointments have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. Except for the pro-rata refund expressly provided in Schedule 1, Section 4, all fees paid are non-refundable, and advertising spend is non-refundable in all circumstances.'},
+    {h3:'Independent Contractor'},
+    {p:'The Supplier is engaged as an independent contractor. Nothing in this Agreement creates a partnership, joint venture, agency, franchise, or employment relationship between the Parties.'},
+    {h3:'Use of Client Results'},
+    {p:'The Customer grants Rambitious Media the right to use performance results, case studies, and campaign outcomes for marketing, promotional, and educational purposes. Confidential information will be excluded unless separately consented to in writing. This permission survives termination of this Agreement.'},
+    {h3:'Confidentiality'},
+    {p:'Each Party agrees to keep confidential any non-public information about the other Party’s business, customers, strategies, processes, pricing, systems, and operations, both during and after the term of this Agreement, except as necessary to perform the Services or as required by law.'},
+    {h3:'Limitation of Liability'},
+    {p:'To the maximum extent permitted by applicable law, the Supplier’s total aggregate liability arising out of or in connection with this Agreement shall not exceed the total Appointment Package Fees actually paid by the Customer under the then-current cycle (excluding advertising spend). In no event shall the Supplier be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages.'},
+    {h3:'Force Majeure'},
+    {p:'Neither Party shall be liable for any failure or delay in performance (other than payment obligations) caused by events beyond its reasonable control, including acts of God, natural disasters, governmental action, internet or utility outages, and the acts, policy changes, suspensions, or restrictions imposed by third-party advertising platforms.'},
+    {h3:'Governing Law & Jurisdiction'},
+    {p:'This Agreement shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law principles. Any dispute shall be brought exclusively in the state or federal courts located in the State of California.'},
+    {h3:'Entire Agreement & Severability'},
+    {p:'This Agreement constitutes the entire agreement between the Parties regarding its subject matter and supersedes all prior discussions, representations, or agreements. If any provision is found invalid or unenforceable, the remaining provisions shall remain in full force and effect.'},
   ];
-  const cardH = 30 + infoRows.length * 11 + 6;
-  addPageIfNeeded(cardH + 16);
-  doc.setFillColor(247, 244, 252);
-  doc.rect(M, y, MAX_W, cardH, 'F');
-  doc.setDrawColor(123, 91, 255);
-  doc.setLineWidth(2);
-  doc.line(M, y, M, y + cardH);
-  doc.setLineWidth(0.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(123, 91, 255);
-  doc.text('CUSTOMER INFORMATION', M + 12, y + 14);
-  doc.setFontSize(10);
-  const labelX = M + 12;
-  const valueX = M + 120;
-  let cy = y + 30;
-  infoRows.forEach(([k, v]) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(110, 110, 110);
-    doc.text(k, labelX, cy);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 20);
-    doc.text(String(v), valueX, cy);
-    cy += 11;
+}
+
+/* ───────── render the on-screen contract ───────── */
+function renderDoc(){
+  const B = blocks(P);
+  let html = '';
+  B.forEach(b=>{
+    if(b.h) html += '<h2>'+b.h+'</h2>';
+    else if(b.h3) html += '<h3>'+b.h3+'</h3>';
+    else if(b.p) html += '<p>'+b.p+'</p>';
+    else if(b.li) html += '<ul><li class="'+(b.sub?'sub-li':'')+'">'+b.li.replace(/^•?\s*/,'')+'</li></ul>';
+    else if(b.table){ html += '<table>'; b.table.forEach((row,i)=>{ html += '<tr>'+row.map(c=> i===0?('<th>'+c+'</th>'):('<td>'+c+'</td>')).join('')+'</tr>'; }); html += '</table>'; }
   });
-  y += cardH + 18;
+  document.getElementById('doc').innerHTML = html;
 
-  h2('Parties');
-  p('1. Supplier:  Rambitious Media is a brand operated by Rambitious LLC, a company incorporated in the United States. All services are provided by Rambitious LLC, and all contractual and payment obligations are between the client and Rambitious LLC, regardless of any use of the Rambitious Media name in marketing or operations. (Hereinafter referred to as the "Supplier")');
-  p(`2. Customer:  ${state.businessName} — ${state.fullName} (${state.email}). The individual signing this Agreement confirms they have full authority to bind the Customer.`);
-
-  h2('Background');
-  p('A. The Supplier provides appointment-setting and marketing services.');
-  p('B. The Customer agrees to purchase, and the Supplier agrees to provide the Services on the terms set out in this Agreement.');
-
-  h2('Schedule 1 — Service Details');
-  h3('1. Services Provided');
-  p('a. Development and implementation of an appointment-setting campaign on behalf of the Customer.');
-  p(svcAdSpendClause());
-  p('c. Outbound contact attempts to all qualified leads (calls, SMS, follow-up) for a period of up to fourteen (14) days per lead, with a minimum of two (2) contact attempts per day.');
-  p('d. Booking of qualified prospects directly onto the Customer\'s calendar via Supplier-managed scheduling system.');
-  p('e. Ongoing optimisation of campaigns where deemed necessary by the Supplier.');
-  p('f. Periodic progress updates via email or telephone where appropriate.');
-  p('g. A showed appointment is defined as a scheduled meeting at which the prospect attends and engages with the Customer for the purpose of receiving an estimate or quote for the Customer\'s services.');
-  if (IS_PIF) p(pifDeliveryClause());
-
-  h3('2. No-Show & Reschedule Credit');
-  p('a. The Customer is only charged for appointments that result in a confirmed showed appointment, as defined in Schedule 1, Section 1(g).');
-  p('b. If a scheduled appointment results in a no-show — meaning the prospect fails to attend the scheduled meeting — the Customer shall not be charged, and the Customer\'s account shall be credited toward one (1) future appointment at no additional cost.');
-  p('c. If a scheduled appointment is rescheduled by the prospect prior to the meeting, the same credit policy applies. The original appointment is not billed, and the rescheduled (or replacement) appointment is provided at no charge once it shows.');
-  p('d. The Customer is responsible for accurately reporting appointment outcomes (showed, no-show, rescheduled) via the Supplier\'s reporting system within forty-eight (48) hours of each scheduled appointment time. Failure to report within this window will result in the appointment being marked as showed and billed accordingly.');
-  p('e. The Supplier reserves the right to verify reported outcomes through reasonable means, including but not limited to follow-up communication with the prospect.');
-
-  h3('3. Limitation of Liability');
-  p('a. The Customer acknowledges that performance may be affected by factors outside the Supplier\'s control, including but not limited to third-party platforms, advertising policies, regulatory changes, market conditions, prospect behaviour, or seasonality.');
-  p('b. The Supplier makes no guarantee regarding the conversion rate of showed appointments into closed sales. Closing rates depend on the Customer\'s sales process, pricing, and execution.');
-  p('c. The Supplier\'s total liability under this Agreement shall be limited to the total amount paid by the Customer to the Supplier in the preceding thirty (30) days.');
-
-  h3('4. Customer Responsibilities');
-  p('The Supplier shall not be liable for delays or underperformance caused by the Customer\'s failure to provide timely information, approvals, calendar availability, service area details, appointment outcome reporting, or communication.');
-
-  h2('Schedule 2 — Charges, Costs & Payment');
-  h3('Charges');
-  p('The Customer shall pay the following fees:');
-  if (IS_PIF) {
-    p(`Service Fee:  $${fmt(DEAL.upfront)} USD, paid in full upfront at signing, covering the full acquisition system and the delivery of ${DEAL.estimates} qualified showed estimates. This fee is fully earned upon signing and is non-refundable.`);
-    p(`Media Spend:  Funded directly by the Customer and paid to the advertising platform (minimum $${fmt(DEAL.minDaily)} per day). The Supplier manages and optimises the Media Spend but does not pay for it.`);
-    p(`There is no per-appointment fee under this Agreement. The Service Fee covers the delivery of ${DEAL.estimates} qualified showed estimates as described in Schedule 1.`);
-  } else if (IS_PAYG) {
-    p(`Upfront Service Fee:  $${fmt(DEAL.upfront)} USD, paid one-time upfront at signing. This fee covers campaign setup, ad creative production, and onboarding, and is fully earned upon signing. The Upfront Service Fee is non-refundable.`);
-    p(`Per-Appointment Fee:  $${fmt(DEAL.perAppt)} USD per showed appointment delivered, billed automatically upon confirmation of a showed appointment.`);
-    p(`Media Spend:  Funded directly by the Customer and paid to the advertising platform (minimum $${fmt(DEAL.minDaily)} per day). The Supplier manages and optimises the Media Spend but does not pay for it.`);
-    p('Per-Appointment Fee — Subject to Change.  The Per-Appointment Fee is subject to change, either upward or downward, based on ad performance, market conditions, or platform cost changes. Any change will be communicated to the Customer in writing at least seven (7) days prior to taking effect. Continued use of the Services after the notice period constitutes acceptance of the revised rate. The Customer may cancel at any time prior to a rate change taking effect without penalty.');
-  } else {
-    p(`Upfront Service Fee:  $${UPFRONT_FEE} USD, paid one-time upfront at signing. This fee covers campaign setup, ad creative production, and onboarding, and is fully earned upon signing. The Upfront Service Fee is non-refundable.`);
-    p(`Per-Appointment Fee:  $${state.rate} USD per showed appointment delivered (selected niche: ${state.niche}), billed automatically upon confirmation of a showed appointment.`);
-    p('Per-Appointment Fee — Subject to Change.  The Per-Appointment Fee is subject to change, either upward or downward, based on ad performance, market conditions, or platform cost changes. Any change will be communicated to the Customer in writing (email or in-platform message) at least seven (7) days prior to taking effect. Continued use of the Services after the notice period constitutes acceptance of the revised rate. The Customer may cancel at any time prior to a rate change taking effect without penalty.');
-  }
-
-  h3('Payment Terms');
-  if (IS_PIF) {
-    p(`The $${fmt(DEAL.upfront)} Service Fee is charged in full at the time of signing. Media Spend is funded directly by the Customer to the advertising platform and is not paid to or collected by the Supplier.`);
-  } else if (IS_PAYG) {
-    p(`Payments are billed automatically to the card on file. The $${fmt(DEAL.upfront)} Upfront Service Fee is charged in full at the time of signing. Per-Appointment Fees are charged automatically upon confirmation of each showed appointment. Media Spend is funded directly by the Customer to the advertising platform.`);
-  } else {
-    p('Payments are billed automatically to the card on file. The $997 Upfront Service Fee is charged in full at the time of signing. Per-Appointment Fees are charged automatically upon confirmation of each showed appointment.');
-  }
-  p('Cancellation.  The Customer may cancel at any time. Cancellation requires at least two (2) working days\' notice and prevents future Per-Appointment charges only. There are no cancellation fees, no minimum contract term, and no penalties for cancelling. The Upfront Service Fee and all previously billed amounts are non-refundable.');
-
-  h3('Chargebacks & Reversals');
-  p('The Customer agrees not to initiate any chargeback or payment reversal without first contacting the Supplier in writing to attempt to resolve the matter in good faith.');
-  p('In the event of a dispute, both parties agree to work promptly and reasonably toward a resolution. Initiating a chargeback or payment reversal without prior written notice and a reasonable opportunity to resolve the issue shall constitute a material breach of this Agreement.');
-  p('If a chargeback or payment reversal is initiated by the Customer in violation of this clause, the Supplier reserves the right to: (i) immediately suspend or terminate all Services, and (ii) recover any outstanding amounts owed, including fees associated with the chargeback or reversal, and any reasonable costs incurred in responding to or disputing such action.');
-  p('The Customer acknowledges that all services provided up to the date of any dispute are valid and billable.');
-
-  h2('Use of Client Results');
-  p('The Customer grants Rambitious LLC the right to use performance results for marketing, promotional, and educational purposes. Confidential information will be excluded unless consented to in writing. This permission survives termination.');
-
-  h2('Governing Law & Jurisdiction');
-  p('This Agreement shall be governed by and construed in accordance with the laws of the State of California, United States, and any disputes shall be subject to the exclusive jurisdiction of the courts located in California.');
-
-  // ─── Signature block on a fresh page if not enough room
-  addPageIfNeeded(220);
-  y += 12;
-  h2('Signatures');
-
-  // Customer signature
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(40, 40, 40);
-  doc.text('Signed for and on behalf of the Customer:', M, y);
-  y += 18;
-
-  // Embed signature image (re-rendered as black-on-white for visibility)
-  const sigForPdf = getSignatureForPDF() || state.signature;
-  if (sigForPdf) {
-    try {
-      doc.addImage(sigForPdf, 'PNG', M, y, 220, 70);
-    } catch(e) { /* noop */ }
-  }
-  y += 74;
-  doc.setDrawColor(160, 160, 160);
-  doc.line(M, y, M + 240, y);
-  y += 12;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
-  doc.text(`Name: ${state.fullName}`, M, y); y += 12;
-  doc.text(`Business: ${state.businessName}`, M, y); y += 12;
-  doc.text(`Email: ${state.email}`, M, y); y += 12;
-  doc.text(`Date: ${todayStr()}`, M, y); y += 24;
-
-  // Supplier signature
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(40, 40, 40);
-  doc.text('Signed for and on behalf of Rambitious LLC:', M, y);
-  y += 18;
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(14);
-  doc.setTextColor(80, 80, 80);
-  doc.text('Ramiz Qumseya', M, y);
-  y += 16;
-  doc.setDrawColor(160, 160, 160);
-  doc.line(M, y, M + 240, y);
-  y += 12;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
-  doc.text('Name: Ramiz Qumseya, Founder', M, y); y += 12;
-  doc.text(`Date: ${todayStr()}`, M, y); y += 12;
-
-  // Footer on every page
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(140, 140, 140);
-    doc.text('Rambitious LLC · Client Services Agreement', M, PAGE_H - 24);
-    doc.text(`Page ${i} of ${pageCount}`, PAGE_W - M, PAGE_H - 24, { align: 'right' });
-  }
-
-  return doc.output('datauristring'); // returns "data:application/pdf;base64,..."
+  // summary pills
+  const pills = P.signers===2 ? [] : [];
+  document.getElementById('summary').innerHTML = [
+    '<span class="pill">'+P.N+' Verified Seated Appointments</span>',
+    '<span class="pill">'+money(P.fee)+' package fee</span>',
+    '<span class="pill">Ad spend '+money(P.day)+'/day (client-funded)</span>',
+    '<span class="pill">'+P.period+'-day guarantee</span>',
+  ].join('');
 }
 
-/* ───────────────────────────────────────────────
-   SUBMIT
-   ─────────────────────────────────────────────── */
-const submitBtn = document.getElementById('submitBtn');
-const errBanner = document.getElementById('errorBanner');
+/* ───────── signer cards + signature pads ───────── */
+const pads = {};
+function buildSigners(){
+  const wrap = document.getElementById('signers');
+  document.getElementById('sigPlural').textContent = P.signers===2 ? 's' : '';
+  const n = P.signers;
+  let html='';
+  for(let i=1;i<=n;i++){
+    const lab = n===2 ? ('Customer — Partner '+i) : 'Authorised Signatory';
+    html += '<div class="signer-card"><div class="st">'+lab+'</div>'
+      + '<div class="grid2">'
+      + '<div class="field"><label>Full Name</label><input id="name'+i+'" autocomplete="name"></div>'
+      + '<div class="field"><label>Title (optional)</label><input id="title'+i+'" placeholder="e.g. Owner"></div>'
+      + '</div>'
+      + '<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Signature</label>'
+      + '<div class="sigwrap"><canvas class="sigpad" id="pad'+i+'"></canvas><button type="button" class="sigclear" data-pad="'+i+'">Clear</button></div>'
+      + '</div>';
+  }
+  wrap.innerHTML = html;
+  for(let i=1;i<=n;i++) initPad(i);
+  document.querySelectorAll('.sigclear').forEach(b=> b.addEventListener('click',()=>{ const p=pads[b.dataset.pad]; if(p) p.clear(); }));
+}
+function initPad(i){
+  const c=document.getElementById('pad'+i); const ratio=Math.max(window.devicePixelRatio||1,1);
+  c.width=c.offsetWidth*ratio; c.height=c.offsetHeight*ratio; c.getContext('2d').scale(ratio,ratio);
+  pads[i]=new SignaturePad(c,{backgroundColor:'rgba(0,0,0,0)',penColor:'#0f1320',minWidth:.8,maxWidth:2});
+}
+/* black-on-white export for PDF (pad is transparent on white card here, so just export) */
+function sigPNG(i){ const p=pads[i]; if(!p||p.isEmpty()) return null; try{ return p.toDataURL('image/png'); }catch(e){ return null; } }
 
-function showErr(msg) {
-  errBanner.textContent = msg;
-  errBanner.classList.add('show');
-  setTimeout(() => errBanner.classList.remove('show'), 6000);
+/* ───────── PDF ───────── */
+function buildPDF(C){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:'letter'});
+  const PW=doc.internal.pageSize.getWidth(), PH=doc.internal.pageSize.getHeight();
+  const M=64, MAXW=PW-M*2; let y=M;
+  const NAVY=[31,58,95];
+  function header(){ doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(150,150,150); doc.text('Rambitious Media — Service Agreement', PW-M, 40, {align:'right'}); }
+  function need(h){ if(y+h>PH-60){ doc.addPage(); y=M; header(); } }
+  function H2(t){ need(40); y+=10; doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(...NAVY); doc.text(t.toUpperCase(),M,y); y+=6; doc.setDrawColor(...NAVY); doc.setLineWidth(1.2); doc.line(M,y,PW-M,y); y+=14; }
+  function H3(t){ need(26); y+=6; doc.setFont('times','bold'); doc.setFontSize(11); doc.setTextColor(20,20,20); doc.text(t,M,y); y+=14; }
+  function PARA(t,opts){ opts=opts||{}; doc.setFont('times', opts.bold?'bold':'normal'); doc.setFontSize(10.5); doc.setTextColor(45,50,70); const ind=opts.ind||0; const lines=doc.splitTextToSize(t,MAXW-ind); lines.forEach(l=>{ need(15); doc.text(l,M+ind,y); y+=14.5; }); y+=4; }
+  function LI(t,sub){ const ind=sub?22:14; doc.setFont('times','normal'); doc.setFontSize(10.5); doc.setTextColor(45,50,70); const lines=doc.splitTextToSize(t.replace(/^\(/,'(') , MAXW-ind-8); lines.forEach((l,k)=>{ need(15); if(k===0 && !sub){ doc.text('•',M+4,y); } doc.text(l,M+ind,y); y+=14.5; }); y+=2; }
+  function TABLE(rows){ const x0=M, cw=[MAXW*0.52, MAXW*0.48]; need(30);
+    // header
+    doc.setFillColor(...NAVY); doc.rect(x0,y,MAXW,22,'F'); doc.setFont('times','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+    doc.text(rows[0][0],x0+8,y+15); doc.text(rows[0][1],x0+cw[0]+8,y+15); y+=22;
+    doc.setTextColor(40,40,40);
+    for(let r=1;r<rows.length;r++){ doc.setFont('times','normal'); doc.setFontSize(9.5);
+      const l1=doc.splitTextToSize(rows[r][0],cw[0]-16), l2=doc.splitTextToSize(rows[r][1],cw[1]-16);
+      const rh=Math.max(l1.length,l2.length)*12+14; need(rh);
+      doc.setDrawColor(220,220,220); doc.rect(x0,y,cw[0],rh); doc.rect(x0+cw[0],y,cw[1],rh);
+      l1.forEach((l,k)=>doc.text(l,x0+8,y+15+k*12)); l2.forEach((l,k)=>doc.text(l,x0+cw[0]+8,y+15+k*12));
+      y+=rh;
+    } y+=8;
+  }
+
+  header();
+  // title block
+  doc.setFont('times','bold'); doc.setFontSize(28); doc.setTextColor(...NAVY); doc.text('SERVICE AGREEMENT', PW/2, y+18, {align:'center'});
+  doc.setFont('times','italic'); doc.setFontSize(13); doc.setTextColor(90,90,90); doc.text('Guaranteed Appointment Delivery Program', PW/2, y+40, {align:'center'});
+  doc.setDrawColor(...NAVY); doc.setLineWidth(2); doc.line(M,y+54,PW-M,y+54); y+=78;
+  PARA('This Service Agreement (the "Agreement") is entered into as of '+todayStr()+' (the "Effective Date") by and between the parties identified below.');
+
+  H2('Parties');
+  H3('1. Supplier');
+  PARA('Legal Name: '+SUPPLIER.legal+'\nDoing Business As: '+SUPPLIER.dba+'\nRegistered Address: '+SUPPLIER.addr+'\n(hereinafter the "Supplier")');
+  H3('2. Customer');
+  const custRows = [['Business Name:', C.business],['Email:', C.email],['Phone:', C.phone||'—'],['Address:', C.address||'—']];
+  if(P.signers===2){ custRows.splice(1,0,['Full Name (Partner 1):',C.names[0]||''],['Full Name (Partner 2):',C.names[1]||'']); }
+  else { custRows.splice(1,0,['Full Name:',C.names[0]||'']); }
+  doc.setFontSize(10.5);
+  custRows.forEach(r=>{ need(15); doc.setFont('times','bold'); doc.setTextColor(20,20,20); doc.text(r[0],M,y); doc.setFont('times','normal'); doc.setTextColor(45,50,70); doc.text(String(r[1]||''),M+150,y); y+=15; });
+  y+=4;
+  PARA('The individual(s) signing this Agreement represent and warrant that they have full authority to bind the Customer (the "Customer"; the Supplier and the Customer each a "Party").');
+
+  blocks(P).forEach(b=>{
+    if(b.h) H2(b.h); else if(b.h3) H3(b.h3); else if(b.p) PARA(b.p); else if(b.li) LI(b.li, b.sub); else if(b.table) TABLE(b.table);
+  });
+
+  // ── signatures ──
+  H2('Signatures');
+  PARA('By signing below, the Parties acknowledge that they have read, understood, and agree to be bound by the terms of this Agreement.');
+  const drawSig = (label, png, name, title) => {
+    need(120); doc.setFont('times','bold'); doc.setFontSize(11); doc.setTextColor(...NAVY); doc.text(label,M,y); y+=8;
+    if(png){ try{ doc.addImage(png,'PNG',M,y,180,56); }catch(e){} } y+=60;
+    doc.setDrawColor(120,120,120); doc.line(M,y,M+260,y); y+=12;
+    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(60,60,60);
+    doc.text('Name: '+(name||''),M,y); y+=13;
+    if(title!==undefined){ doc.text('Title: '+(title||''),M,y); y+=13; }
+    doc.text('Date: '+todayStr(),M,y); y+=22;
+  };
+  for(let i=0;i<P.signers;i++){
+    drawSig(P.signers===2?('Customer — Partner '+(i+1)):'Customer', C.sigs[i], C.names[i], C.titles[i]);
+  }
+  // supplier
+  need(110); doc.setFont('times','bold'); doc.setFontSize(11); doc.setTextColor(...NAVY); doc.text('Rambitious LLC',M,y); y+=8;
+  doc.setFont('times','italic'); doc.setFontSize(15); doc.setTextColor(70,70,70); doc.text(SUPPLIER.signer, M, y+22); y+=34;
+  doc.setDrawColor(120,120,120); doc.line(M,y,M+260,y); y+=12;
+  doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(60,60,60);
+  doc.text('Name: '+SUPPLIER.signer+', '+SUPPLIER.title,M,y); y+=13; doc.text('Date: '+todayStr(),M,y);
+
+  // footers
+  const pc=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pc;i++){ doc.setPage(i); doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(150,150,150); doc.text('Page '+i+' of '+pc+' | Confidential', PW/2, PH-36, {align:'center'}); }
+  return doc.output('datauristring');
 }
 
-submitBtn.addEventListener('click', async () => {
-  // Collect & validate
-  state.businessName = document.getElementById('businessName').value.trim();
-  state.fullName = document.getElementById('fullName').value.trim();
-  state.email = document.getElementById('email').value.trim();
-  const agreed = document.getElementById('agreeCheck').checked;
+/* ───────── submit ───────── */
+function showErr(m){ const e=document.getElementById('err'); e.textContent=m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),6000); }
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
 
-  if (!state.businessName) return showErr('Please enter your business name.');
-  if (!state.fullName) return showErr('Please enter your full name.');
-  if (!state.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email)) return showErr('Please enter a valid email.');
-  if (!sigPad || sigPad.isEmpty()) return showErr('Please sign in the box above.');
-  if (!agreed) return showErr('Please confirm you agree to the terms.');
+function wireSubmit(){
+  const btn=document.getElementById('submit');
+  btn.addEventListener('click', async ()=>{
+    const C={ business:val('business'), email:val('email'), phone:val('phone'), address:val('address'),
+              names:[], titles:[], sigs:[] };
+    for(let i=1;i<=P.signers;i++){ C.names.push(val('name'+i)); C.titles.push(val('title'+i)); }
+    if(!C.business) return showErr('Please enter your business name.');
+    if(!C.email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(C.email)) return showErr('Please enter a valid email.');
+    for(let i=0;i<P.signers;i++){ if(!C.names[i]) return showErr('Please enter the full name for '+(P.signers===2?('Partner '+(i+1)):'the signatory')+'.'); }
+    for(let i=1;i<=P.signers;i++){ const png=sigPNG(i); if(!png) return showErr('Please sign in box '+(P.signers===2?('for Partner '+i):'')+'.'); C.sigs.push(png); }
+    if(!document.getElementById('agree').checked) return showErr('Please confirm you agree to the terms.');
 
-  state.signature = sigPad.toDataURL('image/png');
+    btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Submitting…';
+    let uri; try{ uri=buildPDF(C); }catch(e){ console.error(e); btn.disabled=false; btn.textContent='Sign & Submit Agreement'; return showErr('Could not generate the PDF. Please try again.'); }
+    const base=uri.split(',')[1];
+    try{
+      await fetch(APPS_SCRIPT_URL,{ method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({
+          businessName:C.business, fullName:C.names.join(' & '), email:C.email,
+          niche:(DEAL.niche||''), rate:P.per,
+          dealType:DEAL.type, upfront:P.fee, perAppt:P.per, estimates:P.N, minDaily:P.day, days:P.period, signers:P.signers,
+          phone:C.phone, address:C.address,
+          signedAtPretty:new Date().toLocaleString('en-US',{dateStyle:'long',timeStyle:'short'}),
+          pdfBase64:base,
+        }) });
+      await new Promise(r=>setTimeout(r,700));
+      try{ localStorage.removeItem('rmb_deal'); }catch(e){}
+      window.location.href=SUCCESS_REDIRECT_URL;
+    }catch(e){ btn.disabled=false; btn.textContent='Sign & Submit Agreement'; showErr('Submission failed: '+(e.message||'unknown')); }
+  });
+}
 
-  // Render contract paper to include up-to-date names (in case PDF reads from state)
-  renderContract();
-
-  // Build PDF
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
-
-  let pdfDataUri;
-  try {
-    pdfDataUri = buildPDF();
-  } catch (e) {
-    console.error(e);
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span class="btn-label">Submit & Sign</span>';
-    return showErr('Could not generate PDF. Please try again.');
-  }
-
-  const signedAt = new Date().toISOString();
-  const signedAtPretty = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
-
-  // Convert PDF data URI → Blob (for FormData attachment)
-  const base64 = pdfDataUri.split(',')[1];
-  const pdfBlob = (function () {
-    const bin = atob(base64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return new Blob([arr], { type: 'application/pdf' });
-  })();
-  const safeBiz = state.businessName.replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 30);
-  const pdfFileName = `agreement-${safeBiz}-${Date.now()}.pdf`;
-
-  try {
-    /* ──────────────────────────────────────────────
-       Save PDF to Google Drive + email Ram & customer
-       (handled by Google Apps Script — see google-apps-script.gs)
-       ────────────────────────────────────────────── */
-    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_YOUR')) {
-      throw new Error('Google Apps Script URL not configured');
-    }
-
-    // Apps Script Web Apps don't return CORS headers, so we POST in no-cors mode.
-    // The request goes through fine, we just can't read the response.
-    // Verify success via your Drive folder + email inbox.
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        businessName: state.businessName,
-        fullName: state.fullName,
-        email: state.email,
-        niche: state.niche || (DEAL && DEAL.niche) || '',
-        rate: state.rate,
-        dealType:  (DEAL && DEAL.type) || 'legacy',
-        upfront:   (DEAL && DEAL.upfront) || UPFRONT_FEE,
-        perAppt:   (DEAL && DEAL.perAppt) || state.rate || '',
-        estimates: (DEAL && DEAL.estimates) || '',
-        minDaily:  (DEAL && DEAL.minDaily) || '',
-        days:      (DEAL && DEAL.days) || '',
-        signedAt,
-        signedAtPretty,
-        pdfBase64: base64,
-      }),
-    });
-
-    // Brief delay so the browser actually flushes the request before navigating
-    await new Promise(r => setTimeout(r, 600));
-
-    // ── Pay-first flow: they already paid via Whop before signing, so just finish.
-    try { localStorage.removeItem('rmb_deal'); } catch(e){}
-    window.location.href = SUCCESS_REDIRECT_URL;
-  } catch (e) {
-    console.error('Submission error:', e);
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span class="btn-label">Submit & Sign</span>';
-    showErr('Submission failed: ' + (e.message || 'unknown') + ' — check browser console (F12) for details.');
-  }
-});
-
-/* ─── If a deal token is present, skip the niche step and open on the contract. ─── */
-if (DEAL) {
-  const s1 = document.getElementById('step1');
-  if (s1) s1.style.display = 'none';
-  renderContract();
-  const sum = document.getElementById('selectedSummary');
-  if (sum) sum.innerHTML = dealSummaryLine();
-  gotoStep(2);
-  setTimeout(initSigPad, 120);
+/* ───────── boot ───────── */
+if(!DEAL || !P){ document.getElementById('bad').style.display='block'; }
+else{
+  document.getElementById('app').style.display='block';
+  renderDoc(); buildSigners(); wireSubmit();
+  window.addEventListener('resize', ()=>{ for(let i=1;i<=P.signers;i++){ const d=pads[i]?pads[i].toData():null; initPad(i); if(d) pads[i].fromData(d); } });
 }
 </script>
 </body>

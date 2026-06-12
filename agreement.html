@@ -73,7 +73,6 @@
         <div class="k">Rambitious Media</div>
         <h1>Service Agreement</h1>
         <div class="sub">Guaranteed Appointment Delivery Program</div>
-        <div class="summary" id="summary"></div>
       </div>
       <div class="doc" id="doc"></div>
 
@@ -222,15 +221,6 @@ function renderDoc(){
     else if(b.table){ html += '<table>'; b.table.forEach((row,i)=>{ html += '<tr>'+row.map(c=> i===0?('<th>'+c+'</th>'):('<td>'+c+'</td>')).join('')+'</tr>'; }); html += '</table>'; }
   });
   document.getElementById('doc').innerHTML = html;
-
-  // summary pills
-  const pills = P.signers===2 ? [] : [];
-  document.getElementById('summary').innerHTML = [
-    '<span class="pill">'+P.N+' Verified Seated Appointments</span>',
-    '<span class="pill">'+money(P.fee)+' package fee</span>',
-    '<span class="pill">Ad spend '+money(P.day)+'/day (client-funded)</span>',
-    '<span class="pill">'+P.period+'-day guarantee</span>',
-  ].join('');
 }
 
 /* ───────── signer cards + signature pads ───────── */

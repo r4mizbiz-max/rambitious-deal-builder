@@ -71,8 +71,8 @@
     <div class="paper">
       <div class="dochead">
         <div class="k">Rambitious Media</div>
-        <h1>Service Agreement</h1>
-        <div class="sub">Guaranteed Appointment Delivery Program</div>
+        <h1 id="docTitle">Service Agreement</h1>
+        <div class="sub" id="docSub">Guaranteed Appointment Delivery Program</div>
       </div>
       <div class="doc" id="doc"></div>
 
@@ -209,9 +209,70 @@ function blocks(P){
   ];
 }
 
+/* ───────── the TRIAL agreement (agency-covered ad spend, 14-day review) ───────── */
+function trialBlocks(P){
+  const D = (P.period===14)?'fourteen (14)':(P.period+' ('+P.period+')');
+  return [
+    {h:'Background'},
+    {p:'A. The Supplier provides managed lead generation, advertising, and appointment-setting services for contractors in the home-improvement and renovation sector.'},
+    {p:'B. The Parties wish to enter into a short-term trial engagement (the "Trial") to evaluate the Supplier’s services prior to committing to any longer-term arrangement.'},
+    {p:'C. This Agreement governs the Trial only. Any continuation of services beyond the Trial Period shall be governed by a separate written agreement executed by both Parties.'},
+
+    {h:'Schedule 1 — Trial Service Details'},
+    {h3:'1. Services Provided'},
+    {p:'During the Trial Period, the Supplier shall provide the following services (the "Services"):'},
+    {li:'Design, build, and management of a lead generation and appointment-setting campaign on the Customer’s behalf.'},
+    {li:'Creation and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+    {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as Seated Appointments.'},
+    {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
+    {h3:'2. Advertising Spend — Covered by the Supplier'},
+    {p:'For the duration of the Trial Period, the Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend during the Trial.'},
+    {h3:'3. Definition of a Seated Appointment'},
+    {p:'A "Seated Appointment" means a scheduled estimate appointment at which the prospect — a homeowner or authorised decision-maker located within the Customer’s agreed service area — attends and is present (in person or, where agreed, virtually) for the Customer to provide an estimate. No-shows, cancellations, and prospects that fail these criteria do not constitute Seated Appointments and are not billed.'},
+
+    {h:'Schedule 2 — Charges & Payment'},
+    {h3:'1. Fee Structure'},
+    {table:[
+      ['Fee Type','Amount'],
+      ['Trial Setup Fee', money(P.fee)+' USD — one-time, payable in full on signing'],
+      ['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment delivered'],
+      ['Advertising Spend', 'Covered by the Supplier during the Trial (no cost to the Customer)'],
+    ]},
+    {h3:'2. Payment Terms'},
+    {p:'(a) The Trial Setup Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and is non-refundable.'},
+    {p:'(b) The Per-Seated-Appointment Fee of '+money(P.per)+' USD is billed automatically upon confirmation of each Seated Appointment delivered during the Trial.'},
+    {p:'(c) The Customer authorises the Supplier and its payment processor to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.'},
+
+    {h:'Schedule 3 — Trial Period & Review'},
+    {p:'The "Trial Period" is the period of '+D+' calendar days commencing on the Campaign Launch Date (the date the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier).'},
+    {p:'At the end of the Trial Period, the Parties shall reconvene to review the outcome of the Trial. One of the following shall then apply:'},
+    {li:'(a) Termination. If either Party elects not to continue, this Agreement shall automatically terminate and become void, and no further services shall be delivered. Any fees already paid for services rendered during the Trial are non-refundable, and neither Party shall have any further obligation to the other.', sub:1},
+    {li:'(b) Continuation. If both Parties elect to continue, they shall in good faith agree upon revised terms reflecting the outcome of the Trial (including, without limitation, pricing, volume, and advertising-spend arrangements) and shall execute a separate written agreement. Continued services shall be governed solely by that subsequent agreement, and this Trial Agreement shall be superseded upon its execution.', sub:1},
+    {p:'For the avoidance of doubt, neither Party is obligated to continue beyond the Trial Period, and any continuation is conditional upon the execution of a new written agreement.'},
+
+    {h:'General Terms'},
+    {h3:'No Guarantee of Sales or Revenue'},
+    {p:'The Supplier does not guarantee any particular number of appointments, sales, close rate, revenue, or return on investment during the Trial. The outcome of any appointment depends on factors within the Customer’s control, including the Customer’s sales process, pricing, and professionalism.'},
+    {h3:'Customer Responsibilities'},
+    {p:'The Customer shall maintain a reachable phone number and email address, attend or be available for scheduled appointments, report appointment outcomes within forty-eight (48) hours, and not interfere with the advertising campaigns or assets managed by the Supplier.'},
+    {h3:'Use of Client Results'},
+    {p:'The Customer grants Rambitious Media the right to use performance results and campaign outcomes for marketing, promotional, and educational purposes. Confidential information will be excluded unless separately consented to in writing.'},
+    {h3:'Limitation of Liability'},
+    {p:'To the maximum extent permitted by law, the Supplier’s total aggregate liability under this Agreement shall not exceed the total fees actually paid by the Customer under this Trial Agreement. In no event shall the Supplier be liable for any indirect, incidental, consequential, or punitive damages.'},
+    {h3:'Governing Law & Jurisdiction'},
+    {p:'This Agreement shall be governed by the laws of the State of California, and any dispute shall be brought exclusively in the state or federal courts located in California.'},
+    {h3:'Entire Agreement & Severability'},
+    {p:'This Agreement constitutes the entire agreement between the Parties regarding the Trial and supersedes all prior discussions. If any provision is found invalid, the remaining provisions shall remain in full force and effect. Any continuation beyond the Trial requires a new written agreement signed by both Parties.'},
+  ];
+}
+
+const IS_TRIAL = DEAL && DEAL.type === 'trial';
+const docBlocks = () => IS_TRIAL ? trialBlocks(P) : blocks(P);
+
 /* ───────── render the on-screen contract ───────── */
 function renderDoc(){
-  const B = blocks(P);
+  if (IS_TRIAL){ document.getElementById('docTitle').textContent='Trial Service Agreement'; document.getElementById('docSub').textContent=P.period+'-Day Trial Engagement'; }
+  const B = docBlocks();
   let html = '';
   B.forEach(b=>{
     if(b.h) html += '<h2>'+b.h+'</h2>';
@@ -282,8 +343,8 @@ function buildPDF(C){
 
   header();
   // title block
-  doc.setFont('times','bold'); doc.setFontSize(28); doc.setTextColor(...NAVY); doc.text('SERVICE AGREEMENT', PW/2, y+18, {align:'center'});
-  doc.setFont('times','italic'); doc.setFontSize(13); doc.setTextColor(90,90,90); doc.text('Guaranteed Appointment Delivery Program', PW/2, y+40, {align:'center'});
+  doc.setFont('times','bold'); doc.setFontSize(28); doc.setTextColor(...NAVY); doc.text(IS_TRIAL?'TRIAL SERVICE AGREEMENT':'SERVICE AGREEMENT', PW/2, y+18, {align:'center'});
+  doc.setFont('times','italic'); doc.setFontSize(13); doc.setTextColor(90,90,90); doc.text(IS_TRIAL?(P.period+'-Day Trial Engagement'):'Guaranteed Appointment Delivery Program', PW/2, y+40, {align:'center'});
   doc.setDrawColor(...NAVY); doc.setLineWidth(2); doc.line(M,y+54,PW-M,y+54); y+=78;
   PARA('This Service Agreement (the "Agreement") is entered into as of '+todayStr()+' (the "Effective Date") by and between the parties identified below.');
 

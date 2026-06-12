@@ -124,20 +124,34 @@ function doPost(e) {
     var phone     = String(data.phone     || '').trim();
     var address   = String(data.address   || '').trim();
     var signers   = String(data.signers   || '1').trim();
-    var isProgram = (estimates !== '' && estimates !== '0');
+    var isTrial   = (dealType === 'trial');
+    var isProgram = (!isTrial && estimates !== '' && estimates !== '0');
+    var progName  = isTrial ? 'Trial Service Agreement' : 'Service Agreement (Guaranteed Appointment Delivery Program)';
 
     // Executed terms (rendered as a formal table in the emails).
-    var terms = isProgram ? [
-      ['Appointment Package Fee', '$' + upfront + ' USD — one-time, paid in full on signing'],
-      ['Appointments Guaranteed', estimates + ' Verified Seated Appointments'],
-      ['Guarantee Period', days + ' calendar days from Campaign Launch Date'],
-      ['Advertising Spend', '$' + minDaily + ' USD per day — funded by Customer, invoiced weekly'],
-      ['Per-Appointment Valuation', '$' + perAppt + ' USD (shortfall refund basis)']
-    ] : [
-      ['Upfront Service Fee', '$' + upfront + ' USD — one-time at signing'],
-      ['Per-Appointment Fee', '$' + perAppt + ' USD per showed appointment'],
-      ['Advertising Spend', '$' + minDaily + ' USD per day — funded by Customer']
-    ];
+    var terms;
+    if (isTrial) {
+      terms = [
+        ['Trial Setup Fee', '$' + upfront + ' USD — one-time, paid in full on signing'],
+        ['Per-Seated-Appointment Fee', '$' + perAppt + ' USD per Seated Appointment'],
+        ['Advertising Spend', 'Covered by Rambitious LLC during the Trial (no cost to Customer)'],
+        ['Trial Period', days + ' calendar days from Campaign Launch Date']
+      ];
+    } else if (isProgram) {
+      terms = [
+        ['Appointment Package Fee', '$' + upfront + ' USD — one-time, paid in full on signing'],
+        ['Appointments Guaranteed', estimates + ' Verified Seated Appointments'],
+        ['Guarantee Period', days + ' calendar days from Campaign Launch Date'],
+        ['Advertising Spend', '$' + minDaily + ' USD per day — funded by Customer, invoiced weekly'],
+        ['Per-Appointment Valuation', '$' + perAppt + ' USD (shortfall refund basis)']
+      ];
+    } else {
+      terms = [
+        ['Upfront Service Fee', '$' + upfront + ' USD — one-time at signing'],
+        ['Per-Appointment Fee', '$' + perAppt + ' USD per showed appointment'],
+        ['Advertising Spend', '$' + minDaily + ' USD per day — funded by Customer']
+      ];
+    }
 
     if (!businessName) throw new Error('Missing businessName');
     if (!fullName)     throw new Error('Missing fullName');
@@ -198,11 +212,11 @@ function doPost(e) {
     var custSubject = 'Your Executed Service Agreement — Rambitious LLC';
     var custPlain =
         'Dear ' + (fullName.split(' ')[0] || 'Sir or Madam') + ',\n\n' +
-        'Attached is a fully-executed copy of the Service Agreement (Guaranteed Appointment Delivery Program) entered into between RAMBITIOUS LLC, doing business as Rambitious Media, and ' + businessName + ', executed on ' + signedAtPretty + '. Please retain it for your records.\n\n' +
+        'Attached is a fully-executed copy of the ' + progName + ' entered into between RAMBITIOUS LLC, doing business as Rambitious Media, and ' + businessName + ', executed on ' + signedAtPretty + '. Please retain it for your records.\n\n' +
         'EXECUTED TERMS\n' + termsPlain + '\n\n' +
         'This email and the attached PDF together constitute the parties’ executed agreement. Should you have any questions, please reply to this email.\n\n' +
         'RAMBITIOUS LLC\nDoing Business As Rambitious Media\n41690 Enterprise Cir N, Temecula, CA 92592, United States';
-    var custHtml = buildCustomerHtml(businessName, fullName, email, phone, address, terms, signedAtPretty);
+    var custHtml = buildCustomerHtml(businessName, fullName, email, phone, address, terms, signedAtPretty, progName);
 
     GmailApp.sendEmail(email, custSubject, custPlain, {
       name: FROM_NAME, htmlBody: custHtml, attachments: [pdfBlob], replyTo: NOTIFY_EMAIL
@@ -276,9 +290,9 @@ function buildAdminHtml(businessName, fullName, email, phone, address, terms, si
 </body></html>`;
 }
 
-function buildCustomerHtml(businessName, fullName, email, phone, address, terms, signedAtPretty) {
+function buildCustomerHtml(businessName, fullName, email, phone, address, terms, signedAtPretty, progName) {
   var first=(String(fullName).split(' ')[0]||'Sir or Madam');
-  var bn=esc(businessName), fn=esc(fullName), fi=esc(first), em=esc(email), ph=esc(phone||'—'), ad=esc(address||'—'), sa=esc(signedAtPretty);
+  var bn=esc(businessName), fn=esc(fullName), fi=esc(first), em=esc(email), ph=esc(phone||'—'), ad=esc(address||'—'), sa=esc(signedAtPretty), pg=esc(progName||'Service Agreement');
   return `
 <!DOCTYPE html><html><body style="margin:0;padding:0;background:#eef0f4;font-family:Georgia,'Times New Roman',serif;color:#1a1f2e;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f4;padding:30px 16px;"><tr><td align="center">
@@ -287,7 +301,7 @@ function buildCustomerHtml(businessName, fullName, email, phone, address, terms,
       <tr><td style="padding:30px 44px 8px;">
         <div style="font-size:22px;font-weight:bold;color:#1f3a5f;margin-bottom:16px;">Executed Service Agreement</div>
         <div style="font-size:14px;color:#2b3242;line-height:1.7;margin-bottom:8px;">Dear ${fi},</div>
-        <div style="font-size:14px;color:#2b3242;line-height:1.7;margin-bottom:18px;">Attached is a fully-executed copy of the <strong>Service Agreement (Guaranteed Appointment Delivery Program)</strong> entered into between <strong>RAMBITIOUS LLC</strong>, doing business as Rambitious Media, and <strong>${bn}</strong>, executed on ${sa}. Please retain this copy for your records.</div>
+        <div style="font-size:14px;color:#2b3242;line-height:1.7;margin-bottom:18px;">Attached is a fully-executed copy of the <strong>${pg}</strong> entered into between <strong>RAMBITIOUS LLC</strong>, doing business as Rambitious Media, and <strong>${bn}</strong>, executed on ${sa}. Please retain this copy for your records.</div>
         <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#1f3a5f;font-weight:bold;margin-bottom:4px;">Parties &amp; Execution</div>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:18px;">
           ${trow('Customer','<strong>'+bn+'</strong>')}

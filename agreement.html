@@ -372,7 +372,9 @@ function wireSubmit(){
         }) });
       await new Promise(r=>setTimeout(r,700));
       try{ localStorage.removeItem('rmb_deal'); }catch(e){}
-      window.location.href=SUCCESS_REDIRECT_URL;
+      // sign-first: after signing, send them to the Whop checkout to pay. pay-first: already paid → thank-you.
+      if (DEAL.flow === 'sign' && DEAL.whop) { window.location.href = DEAL.whop; }
+      else { window.location.href = SUCCESS_REDIRECT_URL; }
     }catch(e){ btn.disabled=false; btn.textContent='Sign & Submit Agreement'; showErr('Submission failed: '+(e.message||'unknown')); }
   });
 }

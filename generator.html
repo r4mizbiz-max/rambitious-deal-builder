@@ -20,6 +20,13 @@
   .seg button.on{border-color:var(--accent);background:#f7f4ff}
   .seg button b{display:block;font-size:15px;font-weight:700}
   .seg button span{font-size:12px;color:var(--mut)}
+  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+  @media(max-width:560px){.toggles{grid-template-columns:1fr}}
+  .tg .tgl{font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+  .seg.sm{margin-bottom:0}
+  .seg.sm button{padding:11px 12px}
+  .seg.sm button b{font-size:13.5px}
+  .seg.sm button span{font-size:11px}
   label{display:block;font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
   .f{margin-bottom:16px}
@@ -61,6 +68,23 @@
       <button data-type="payg"><b>Pay as you go</b><span>Setup fee + per-appointment</span></button>
     </div>
 
+    <div class="toggles">
+      <div class="tg">
+        <div class="tgl">Flow</div>
+        <div class="seg sm" id="flowSeg">
+          <button data-flow="pay" class="on"><b>Pay first</b><span>Pay → then sign</span></button>
+          <button data-flow="sign"><b>Sign first</b><span>Sign → then pay</span></button>
+        </div>
+      </div>
+      <div class="tg">
+        <div class="tgl">Signers</div>
+        <div class="seg sm" id="signSeg">
+          <button data-signers="1" class="on"><b>1 signer</b><span>Single Full Name</span></button>
+          <button data-signers="2"><b>2 signers</b><span>Partner 1 &amp; 2</span></button>
+        </div>
+      </div>
+    </div>
+
     <div class="grid">
       <div class="f"><label id="lblUpfront">Upfront / total ($)</label><input id="upfront" type="number" value="6000" min="0" step="100"></div>
       <div class="f" id="perApptWrap"><label>Per appointment ($)</label><input id="perAppt" type="number" value="300" min="0" step="25"></div>
@@ -71,9 +95,8 @@
     </div>
     <div class="grid">
       <div class="f" id="daysWrap"><label>Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
-      <div class="f"><label>Number of signers</label><select id="signers"><option value="1">1 — single signer (Full Name)</option><option value="2">2 — Partner 1 &amp; Partner 2</option></select></div>
+      <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
     </div>
-    <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
     <div class="f">
       <label>Whop checkout link <span style="text-transform:none;font-weight:500">(optional)</span></label>
       <div class="linkrow">
@@ -91,7 +114,7 @@
     <div class="out" id="out">
       <label>Send this to the client</label>
       <div class="linkrow"><input id="clientLink" readonly><button type="button" onclick="copy('clientLink',this)">Copy</button></div>
-      <div class="hint">They open it → <b>pay</b> via the Whop checkout → <b>sign</b> the adapted agreement. The signed PDF lands in your Drive + both inboxes.</div>
+      <div class="hint" id="outHint"></div>
     </div>
 
   </div>
@@ -115,16 +138,27 @@ document.getElementById('gateBtn').addEventListener('click', tryGate);
 document.getElementById('gatePw').addEventListener('keydown', e => { if (e.key === 'Enter') tryGate(); });
 
 /* ════════ CONFIG ════════ */
-const PAY_URL = 'https://www.rambitiousmedia.com/pay';   // pay-first redirector → Whop → /agreement
+const PAY_URL       = 'https://www.rambitiousmedia.com/pay';    // pay-first redirector → Whop → /ament
+const AGREEMENT_URL = 'https://www.rambitiousmedia.com/ament';  // sign-first → sign → Whop
 
 let TYPE = 'pif';
+let FLOW = 'pay';      // 'pay' = pay first, 'sign' = sign first
+let SIGNERS = 1;
 const $ = id => document.getElementById(id);
 
-/* segmented control */
+/* segmented controls */
 document.querySelectorAll('#seg button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b));
   TYPE = b.dataset.type;
   syncFields();
+}));
+document.querySelectorAll('#flowSeg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#flowSeg button').forEach(x => x.classList.toggle('on', x === b));
+  FLOW = b.dataset.flow;
+}));
+document.querySelectorAll('#signSeg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#signSeg button').forEach(x => x.classList.toggle('on', x === b));
+  SIGNERS = Number(b.dataset.signers);
 }));
 
 function syncFields(){
@@ -146,7 +180,8 @@ function deal(){
     estimates: Number($('estimates').value || 0),
     minDaily: Number($('minDaily').value || 0),
     days: Number($('days').value || 0),
-    signers: Number($('signers').value || 1),
+    signers: SIGNERS,
+    flow: FLOW,
     niche: $('niche').value.trim(),
     whop: $('whop').value.trim(),
   };
@@ -198,8 +233,12 @@ $('mintBtn').addEventListener('click', async () => {
 $('genBtn').addEventListener('click', () => {
   const d = deal();
   if (!d.upfront) { setStatus('Set a price first.', 'err'); return; }
-  const link = `${PAY_URL}?t=${encodeToken(d)}`;
+  const root = (d.flow === 'sign') ? AGREEMENT_URL : PAY_URL;   // sign-first opens the agreement; pay-first opens checkout
+  const link = `${root}?t=${encodeToken(d)}`;
   $('clientLink').value = link;
+  $('outHint').innerHTML = (d.flow === 'sign')
+    ? 'They open it → <b>sign</b> the agreement → <b>pay</b> via Whop checkout. The signed PDF lands in your Drive + both inboxes.'
+    : 'They open it → <b>pay</b> via Whop checkout → <b>sign</b> the adapted agreement. The signed PDF lands in your Drive + both inboxes.';
   $('out').classList.add('show');
   $('out').scrollIntoView({ behavior: 'smooth' });
 });

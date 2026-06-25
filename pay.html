@@ -92,9 +92,9 @@
         <div class="tv"><div class="l">Total value</div><div class="n" id="tvNum"></div></div>
         <div class="now"><div class="l">Your investment today</div><div class="n" id="nowNum"></div></div>
       </div>
-      <div class="why">
-        <div class="t">Why you fund the ad spend</div>
-        <p>You're not paying us for "marketing" — you're putting capital into your own growth, and we manage it. Zero pressure to recoup our money means we optimize purely for the quality of your appointments. No-shows are credited, never counted.</p>
+      <div class="why" id="whyBox">
+        <div class="t" id="whyT">Why you fund the ad spend</div>
+        <p id="whyP">You're not paying us for "marketing" — you're putting capital into your own growth, and we manage it. Zero pressure to recoup our money means we optimize purely for the quality of your appointments. No-shows are credited, never counted.</p>
       </div>
     </div>
 
@@ -126,7 +126,8 @@
   // backup so the agreement still adapts even if the return URL drops the token
   try{ localStorage.setItem('rmb_deal', JSON.stringify(deal)); }catch(e){}
 
-  var pif = deal.type === 'pif';
+  var pif = (deal.type === 'pif' || deal.type === 'program');   // program layout (legacy alias 'pif')
+  var clientFunds = (deal.adSpend == null) ? true : (deal.adSpend === 'client');   // legacy tokens = client-funded
   // headline / price / pills
   $('headline').textContent = pif ? (deal.estimates + ' Qualified In-Home Estimates') : 'Your Growth Partnership';
   $('lede').textContent = pif
@@ -135,10 +136,17 @@
   $('priceBig').textContent = fmt(deal.upfront);
   $('priceUnit').innerHTML = pif ? ('one-time<br>' + deal.estimates + ' estimates') : 'upfront<br>+ per-appointment';
 
+  var adPill = clientFunds ? 'You own the ad account' : 'We cover the ad spend';
   var pills = pif
-    ? ['$' + Number(deal.estimates) + ' seated estimates', 'No-show? Credited', 'You own the ad account', 'Delivered in ' + deal.days + ' days']
-    : [fmt(deal.perAppt) + ' per showed appt', 'No-show? Credited', 'You own the ad account', 'Cancel anytime'];
+    ? [Number(deal.estimates) + ' seated estimates', 'No-show? Credited', adPill, 'Delivered in ' + deal.days + ' days']
+    : [fmt(deal.perAppt) + ' per showed appt', 'No-show? Credited', adPill, 'Cancel anytime'];
   $('pills').innerHTML = pills.map(function(p,i){ return '<span class="pill'+(i===1?' good':'')+'">'+p+'</span>'; }).join('');
+
+  // ad-spend messaging block adapts to who funds it
+  if(!clientFunds){
+    $('whyT').textContent = 'Why this is fully managed';
+    $('whyP').textContent = 'Rambitious covers and manages the ad spend — you don’t hand over ad accounts or budgets. You focus on the estimates we put in front of you; no-shows are credited, never counted.';
+  }
 
   // value stack
   var items = [

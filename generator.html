@@ -3,36 +3,37 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rambitious — Deal Link Builder</title>
+<title>Rambitious — Agreement & Deal Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#0a0b10;--mut:#6b6b78;--line:#e6e6ec;--soft:#f6f6f8;--accent:#7B5BFF;--accent2:#F580B8;--good:#0ca37f}
+  :root{--ink:#0a0b10;--mut:#6b6b78;--line:#e6e6ec;--soft:#f6f6f8;--accent:#7B5BFF;--accent2:#F580B8;--good:#0ca37f;--warn:#c47f00}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',system-ui,sans-serif;background:#0a0b10;color:var(--ink);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
-  .wrap{width:min(680px,100%);background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .wrap{width:min(720px,100%);background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
   .head{background:linear-gradient(135deg,#7B5BFF,#B57BFF 40%,#F580B8 75%,#FF9A6B);padding:30px 34px;color:#fff}
   .head .ey{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;font-weight:600}
   .head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
   .head p{font-size:13.5px;opacity:.9;margin-top:6px;line-height:1.5}
-  .body{padding:28px 34px 34px}
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
-  .seg button{padding:16px;border-radius:14px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;text-align:left;transition:.15s}
-  .seg button.on{border-color:var(--accent);background:#f7f4ff}
-  .seg button b{display:block;font-size:15px;font-weight:700}
-  .seg button span{font-size:12px;color:var(--mut)}
-  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+  .body{padding:26px 34px 34px}
+  .blk{margin-bottom:22px}
+  .blk>.tgl{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .seg{display:grid;gap:10px}
+  .seg.c2{grid-template-columns:1fr 1fr}
+  .seg.c4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:560px){.seg.c4{grid-template-columns:1fr 1fr}}
+  .seg button{padding:13px 12px;border-radius:13px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;text-align:left;transition:.13s}
+  .seg button.on{border-color:var(--accent);background:#f7f4ff;box-shadow:0 0 0 1px var(--accent) inset}
+  .seg button b{display:block;font-size:14px;font-weight:700}
+  .seg button span{display:block;font-size:11px;color:var(--mut);margin-top:2px;line-height:1.3}
+  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   @media(max-width:560px){.toggles{grid-template-columns:1fr}}
-  .tg .tgl{font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
-  .seg.sm{margin-bottom:0}
-  .seg.sm button{padding:11px 12px}
-  .seg.sm button b{font-size:13.5px}
-  .seg.sm button span{font-size:11px}
   label{display:block;font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
   .f{margin-bottom:16px}
-  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:15px;color:var(--ink);background:#fff}
-  input:focus,select:focus{outline:none;border-color:var(--accent)}
-  .pre{padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--line);font-size:13.5px;color:#3b3f4a;line-height:1.6;margin-bottom:20px}
+  input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:15px;color:var(--ink);background:#fff}
+  textarea{min-height:64px;resize:vertical;line-height:1.5}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  .pre{padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--line);font-size:13.5px;color:#3b3f4a;line-height:1.65;margin-bottom:18px}
   .pre b{color:var(--ink)}
   .btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#7B5BFF,#F580B8);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
   .btn:disabled{opacity:.6;cursor:not-allowed}
@@ -41,10 +42,20 @@
   .linkrow{display:flex;gap:8px;margin-bottom:10px}
   .linkrow input{font-size:13px;background:var(--soft)}
   .linkrow button{flex:0 0 auto;padding:0 16px;border:1.5px solid var(--accent);background:#fff;color:var(--accent);border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}
-  .hint{font-size:12px;color:var(--mut);margin-top:4px}
+  .hint{font-size:12px;color:var(--mut);margin-top:4px;line-height:1.45}
   .hide{display:none !important}
   .status{font-size:12.5px;margin-top:8px;min-height:16px}
-  .status.err{color:#c0392b}.status.ok{color:var(--good)}
+  .status.err{color:#c0392b}.status.ok{color:var(--good)}.status.warn{color:var(--warn)}
+  /* advanced / custom clauses */
+  details.adv{border:1px solid var(--line);border-radius:13px;margin-bottom:20px;overflow:hidden}
+  details.adv>summary{list-style:none;cursor:pointer;padding:14px 16px;font-size:13.5px;font-weight:700;color:var(--ink);background:var(--soft);display:flex;align-items:center;gap:8px}
+  details.adv>summary::-webkit-details-marker{display:none}
+  details.adv>summary .chev{margin-left:auto;color:var(--mut);transition:.15s}
+  details.adv[open]>summary .chev{transform:rotate(90deg)}
+  .advbody{padding:18px 16px 6px}
+  .clause{border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:12px;background:#fff;position:relative}
+  .clause .rm{position:absolute;top:10px;right:12px;font-size:11px;color:#c0392b;background:#fdecea;border:1px solid #f5c6c0;border-radius:7px;padding:3px 9px;cursor:pointer;font-weight:600}
+  .addbtn{width:100%;padding:11px;border:1.5px dashed var(--accent);background:#faf8ff;color:var(--accent);border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}
 </style>
 </head>
 <body>
@@ -55,66 +66,118 @@
   <button id="gateBtn" style="padding:13px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,#7B5BFF,#F580B8);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">Enter</button>
   <div id="gateErr" style="font-size:13px;color:#ff6b6b;min-height:16px"></div>
 </div>
+
 <div class="wrap">
   <div class="head">
     <div class="ey">Rambitious Media · internal</div>
-    <h1>Deal Link Builder</h1>
-    <p>Pick the structure, set the price, hit generate. You get one link on your domain — it mints the Whop checkout and the agreement adapts itself.</p>
+    <h1>Agreement &amp; Deal Builder</h1>
+    <p>Pick the structure, set every term, hit generate. You get one link on your domain — the agreement page builds itself from the link: contract text, signed PDF, and the emails to you + the signer.</p>
   </div>
   <div class="body">
 
-    <div class="seg" id="seg">
-      <button data-type="pif" class="on"><b>Pay in Full</b><span>One price, N estimates, client-funded ads</span></button>
-      <button data-type="payg"><b>Pay as you go</b><span>Setup fee + per-appointment</span></button>
+    <!-- AGREEMENT TYPE -->
+    <div class="blk">
+      <div class="tgl">Agreement type</div>
+      <div class="seg c4" id="typeSeg">
+        <button data-type="program" class="on"><b>Program</b><span>Guaranteed appointments</span></button>
+        <button data-type="payg"><b>Pay-as-you-go</b><span>Setup + per-appt</span></button>
+        <button data-type="trial"><b>Trial</b><span>Short evaluation</span></button>
+        <button data-type="flat"><b>Flat / Custom</b><span>Simple service agreement</span></button>
+      </div>
     </div>
 
+    <!-- TOGGLES: ad spend + output -->
     <div class="toggles">
-      <div class="tg">
-        <div class="tgl">Flow</div>
-        <div class="seg sm" id="flowSeg">
-          <button data-flow="pay" class="on"><b>Pay first</b><span>Pay → then sign</span></button>
-          <button data-flow="sign"><b>Sign first</b><span>Sign → then pay</span></button>
+      <div class="blk" style="margin-bottom:0">
+        <div class="tgl">Ad spend funded by</div>
+        <div class="seg" id="spendSeg" style="grid-template-columns:1fr 1fr 1fr">
+          <button data-spend="client" class="on"><b>Client</b><span>min $/day</span></button>
+          <button data-spend="agency"><b>Rambitious</b><span>we cover it</span></button>
+          <button data-spend="none"><b>N/A</b><span>no ad spend</span></button>
         </div>
       </div>
-      <div class="tg">
+      <div class="blk" style="margin-bottom:0">
+        <div class="tgl">Output</div>
+        <div class="seg c2" id="payModeSeg">
+          <button data-pay="whop" class="on"><b>+ Payment</b><span>Whop checkout</span></button>
+          <button data-pay="none"><b>Agreement only</b><span>no payment</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOGGLES: flow + signers -->
+    <div class="toggles" style="margin-top:18px">
+      <div class="blk" style="margin-bottom:0">
+        <div class="tgl">Flow</div>
+        <div class="seg c2" id="flowSeg">
+          <button data-flow="sign" class="on"><b>Sign first</b><span>Sign → then pay</span></button>
+          <button data-flow="pay"><b>Pay first</b><span>Pay → then sign</span></button>
+        </div>
+        <div class="hint" id="flowHint"></div>
+      </div>
+      <div class="blk" style="margin-bottom:0">
         <div class="tgl">Signers</div>
-        <div class="seg sm" id="signSeg">
-          <button data-signers="1" class="on"><b>1 signer</b><span>Single Full Name</span></button>
+        <div class="seg c2" id="signSeg">
+          <button data-signers="1" class="on"><b>1 signer</b><span>Single name</span></button>
           <button data-signers="2"><b>2 signers</b><span>Partner 1 &amp; 2</span></button>
         </div>
       </div>
     </div>
 
+    <!-- NUMBERS -->
+    <div style="margin-top:22px"></div>
     <div class="grid">
-      <div class="f"><label id="lblUpfront">Upfront / total ($)</label><input id="upfront" type="number" value="6000" min="0" step="100"></div>
-      <div class="f" id="perApptWrap"><label>Per appointment ($)</label><input id="perAppt" type="number" value="300" min="0" step="25"></div>
+      <div class="f"><label id="lblUpfront">Total price ($)</label><input id="upfront" type="number" value="6000" min="0" step="100"></div>
+      <div class="f" id="perApptWrap"><label id="lblPer">Per appointment ($)</label><input id="perAppt" type="number" value="300" min="0" step="25"></div>
     </div>
     <div class="grid">
-      <div class="f" id="estWrap"><label>Estimates delivered</label><input id="estimates" type="number" value="20" min="1" step="1"></div>
-      <div class="f"><label>Min ad spend / day ($)</label><input id="minDaily" type="number" value="150" min="0" step="10"></div>
+      <div class="f" id="estWrap"><label>Appointments guaranteed</label><input id="estimates" type="number" value="20" min="1" step="1"></div>
+      <div class="f" id="minDailyWrap"><label>Min ad spend / day ($)</label><input id="minDaily" type="number" value="150" min="0" step="10"></div>
     </div>
     <div class="grid">
-      <div class="f" id="daysWrap"><label>Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
+      <div class="f" id="daysWrap"><label id="lblDays">Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
       <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
     </div>
-    <div class="f">
-      <label>Whop checkout link <span style="text-transform:none;font-weight:500">(optional)</span></label>
+
+    <div class="grid">
+      <div class="f"><label>Pre-fill business name (optional)</label><input id="business" type="text" placeholder="Leave blank → client types it"></div>
+      <div class="f"><label>Pre-fill signer name (optional)</label><input id="contact" type="text" placeholder="Leave blank → client types it"></div>
+    </div>
+
+    <div class="f" id="whopWrap">
+      <label>Whop checkout link</label>
       <div class="linkrow">
         <input id="whop" type="text" placeholder="https://whop.com/checkout/plan_…">
         <button type="button" id="mintBtn" class="hide">Auto-create</button>
       </div>
       <div class="status" id="mintStatus"></div>
-      <div class="hint">Once the minter is live, hit <b>Auto-create</b> to generate the checkout for this price automatically. Until then, make the plan in Whop and paste its link (remembered per deal type).</div>
+      <div class="hint">Make the plan in Whop and paste its link (remembered per deal type). With the minter Worker live, <b>Auto-create</b> mints it for this price.</div>
     </div>
+
+    <!-- ADVANCED: wording + custom clauses -->
+    <details class="adv">
+      <summary>Customize wording &amp; add clauses <span class="chev">›</span></summary>
+      <div class="advbody">
+        <div class="grid">
+          <div class="f"><label>Agreement title</label><input id="title" type="text" placeholder="(auto from type)"></div>
+          <div class="f"><label>Subtitle</label><input id="subtitle" type="text" placeholder="(auto from type)"></div>
+        </div>
+        <label style="margin-bottom:8px">Custom clauses (appended to General Terms)</label>
+        <div id="clauses"></div>
+        <button type="button" class="addbtn" id="addClause">+ Add custom clause</button>
+        <div class="hint" style="margin-top:8px">Each clause = a heading + body paragraph. They render in the contract, the signed PDF, and stay out of the way if left empty.</div>
+      </div>
+    </details>
 
     <div class="pre" id="preview"></div>
 
-    <button class="btn" id="genBtn">Generate client link →</button>
+    <button class="btn" id="genBtn">Generate link →</button>
 
     <div class="out" id="out">
       <label>Send this to the client</label>
       <div class="linkrow"><input id="clientLink" readonly><button type="button" onclick="copy('clientLink',this)">Copy</button></div>
       <div class="hint" id="outHint"></div>
+      <div class="status" id="lenStatus"></div>
     </div>
 
   </div>
@@ -139,64 +202,125 @@ document.getElementById('gatePw').addEventListener('keydown', e => { if (e.key =
 
 /* ════════ CONFIG ════════ */
 const PAY_URL       = 'https://www.rambitiousmedia.com/pay';    // pay-first redirector → Whop → /ament
-const AGREEMENT_URL = 'https://www.rambitiousmedia.com/ament';  // sign-first → sign → Whop
+const AGREEMENT_URL = 'https://www.rambitiousmedia.com/ament';  // sign-first / agreement-only → sign
 
-let TYPE = 'pif';
-let FLOW = 'pay';      // 'pay' = pay first, 'sign' = sign first
+let TYPE = 'program';   // program | payg | trial | flat
+let SPEND = 'client';   // client | agency | none
+let PAY = 'whop';       // whop | none
+let FLOW = 'sign';      // sign | pay
 let SIGNERS = 1;
 const $ = id => document.getElementById(id);
 
-/* segmented controls */
-document.querySelectorAll('#seg button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b));
-  TYPE = b.dataset.type;
-  syncFields();
-}));
-document.querySelectorAll('#flowSeg button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('#flowSeg button').forEach(x => x.classList.toggle('on', x === b));
-  FLOW = b.dataset.flow;
-}));
-document.querySelectorAll('#signSeg button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('#signSeg button').forEach(x => x.classList.toggle('on', x === b));
-  SIGNERS = Number(b.dataset.signers);
-}));
+/* segmented controls (generic) */
+function wireSeg(segId, attr, set){
+  document.querySelectorAll('#'+segId+' button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#'+segId+' button').forEach(x => x.classList.toggle('on', x === b));
+    set(b.dataset[attr]); syncFields();
+  }));
+}
+wireSeg('typeSeg','type', v => { TYPE = v; loadWhop(); });           // reload remembered link for the new type
+wireSeg('spendSeg','spend', v => SPEND = v);
+wireSeg('payModeSeg','pay', v => { PAY = v; if (PAY === 'whop') loadWhop(); });
+wireSeg('flowSeg','flow', v => FLOW = v);
+wireSeg('signSeg','signers', v => SIGNERS = Number(v));
+
+function setSeg(segId, attr, val){
+  document.querySelectorAll('#'+segId+' button').forEach(x => x.classList.toggle('on', x.dataset[attr] === String(val)));
+}
 
 function syncFields(){
-  const pif = TYPE === 'pif';
-  $('lblUpfront').textContent = pif ? 'Total price ($)' : 'Upfront / setup fee ($)';
-  $('perApptWrap').classList.toggle('hide', pif);
-  $('estWrap').classList.toggle('hide', !pif);
-  $('daysWrap').classList.toggle('hide', !pif);
-  if (pif && $('upfront').value === '997') $('upfront').value = '6000';
-  loadWhop();
+  const isProgram = TYPE === 'program', isPayg = TYPE === 'payg', isTrial = TYPE === 'trial', isFlat = TYPE === 'flat';
+
+  // upfront label
+  $('lblUpfront').textContent = isProgram ? 'Total price ($)' : isTrial ? 'Trial setup fee ($)' : isFlat ? 'Flat fee ($)' : 'Upfront / setup fee ($)';
+  // per-appt only for payg + trial
+  $('perApptWrap').classList.toggle('hide', !(isPayg || isTrial));
+  $('lblPer').textContent = isTrial ? 'Per seated appt ($)' : 'Per appointment ($)';
+  // estimates only for program
+  $('estWrap').classList.toggle('hide', !isProgram);
+  // days: program (fulfillment) + trial (trial period)
+  $('daysWrap').classList.toggle('hide', !(isProgram || isTrial));
+  $('lblDays').textContent = isTrial ? 'Trial period (days)' : 'Fulfillment window (days)';
+
+  // min daily only when client funds spend
+  $('minDailyWrap').classList.toggle('hide', SPEND !== 'client');
+
+  // payment / flow
+  const noPay = PAY === 'none';
+  $('whopWrap').classList.toggle('hide', noPay);
+  if (noPay){ FLOW = 'sign'; setSeg('flowSeg','flow','sign'); }
+  // flow only matters with payment
+  document.querySelector('#flowSeg').closest('.blk').style.opacity = noPay ? .45 : 1;
+  document.querySelectorAll('#flowSeg button').forEach(b => b.disabled = noPay);
+  $('flowHint').textContent = noPay ? 'Agreement-only → always sign, no payment step.'
+    : (FLOW === 'sign' ? 'Client signs, then is sent to pay.' : 'Client pays, then signs the agreement.');
+
+  if (isProgram && $('upfront').value === '997') $('upfront').value = '6000';
   renderPreview();
+}
+
+/* ─── custom clauses ─── */
+function clauseRow(h, p){
+  const div = document.createElement('div'); div.className = 'clause';
+  div.innerHTML = '<button type="button" class="rm">Remove</button>'
+    + '<div class="f" style="margin-bottom:10px"><label>Clause heading</label><input class="cH" type="text" placeholder="e.g. Exclusivity"></div>'
+    + '<div class="f" style="margin-bottom:0"><label>Clause body</label><textarea class="cP" placeholder="The full paragraph text…"></textarea></div>';
+  if (h) div.querySelector('.cH').value = h;
+  if (p) div.querySelector('.cP').value = p;
+  div.querySelector('.rm').addEventListener('click', () => { div.remove(); renderPreview(); });
+  div.querySelector('.cH').addEventListener('input', renderPreview);
+  div.querySelector('.cP').addEventListener('input', renderPreview);
+  $('clauses').appendChild(div);
+}
+$('addClause').addEventListener('click', () => clauseRow());
+function customClauses(){
+  return [...document.querySelectorAll('#clauses .clause')].map(c => ({
+    h: c.querySelector('.cH').value.trim(), p: c.querySelector('.cP').value.trim()
+  })).filter(c => c.h || c.p);
 }
 
 function deal(){
   const d = {
-    type: TYPE,
+    v: 2,
+    type: TYPE, adSpend: SPEND, payment: PAY, flow: FLOW, signers: SIGNERS,
     upfront: Number($('upfront').value || 0),
     perAppt: Number($('perAppt').value || 0),
     estimates: Number($('estimates').value || 0),
     minDaily: Number($('minDaily').value || 0),
     days: Number($('days').value || 0),
-    signers: SIGNERS,
-    flow: FLOW,
     niche: $('niche').value.trim(),
-    whop: $('whop').value.trim(),
+    business: $('business').value.trim(),
+    contact: $('contact').value.trim(),
+    title: $('title').value.trim(),
+    subtitle: $('subtitle').value.trim(),
+    whop: PAY === 'whop' ? $('whop').value.trim() : '',
+    custom: customClauses(),
   };
-  if (d.type === 'pif') { d.perAppt = 0; }
+  if (!(d.type === 'payg' || d.type === 'trial')) d.perAppt = 0;
+  if (d.type !== 'program') d.estimates = 0;
+  if (d.adSpend !== 'client') d.minDaily = 0;
   return d;
 }
 
 function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+function spendPhrase(d){
+  if (d.adSpend === 'client') return 'Client funds the ad spend (min $'+fmt(d.minDaily)+'/day).';
+  if (d.adSpend === 'agency') return 'Rambitious covers 100% of the ad spend.';
+  return '';
+}
 function renderPreview(){
   const d = deal();
-  $('preview').innerHTML = d.type === 'pif'
-    ? `<b>Pay in Full.</b> $${fmt(d.upfront)} for <b>${d.estimates}</b> qualified estimates. Client funds the ad spend (min $${fmt(d.minDaily)}/day). Fulfilled within <b>${d.days}</b> days.`
-    : `<b>Pay as you go.</b> $${fmt(d.upfront)} upfront + <b>$${fmt(d.perAppt)}</b> per showed appointment. Client funds the ad spend (min $${fmt(d.minDaily)}/day).`;
+  let core;
+  if (d.type === 'program')      core = '<b>Program.</b> $'+fmt(d.upfront)+' for <b>'+d.estimates+'</b> qualified estimates. Fulfilled within <b>'+d.days+'</b> days.';
+  else if (d.type === 'payg')    core = '<b>Pay-as-you-go.</b> $'+fmt(d.upfront)+' upfront + <b>$'+fmt(d.perAppt)+'</b> per showed appointment.';
+  else if (d.type === 'trial')   core = '<b>Trial.</b> $'+fmt(d.upfront)+' setup + <b>$'+fmt(d.perAppt)+'</b> per seated appt, over <b>'+d.days+'</b> days.';
+  else                           core = '<b>Flat / Custom.</b> $'+fmt(d.upfront)+' flat fee.';
+  const sp = spendPhrase(d);
+  const out = d.payment === 'none' ? 'Agreement only — no payment step.' : (d.flow === 'sign' ? 'Sign → then pay (Whop).' : 'Pay (Whop) → then sign.');
+  const cc = d.custom.length ? ' <b>+'+d.custom.length+'</b> custom clause'+(d.custom.length>1?'s':'')+'.' : '';
+  $('preview').innerHTML = core + (sp ? ' '+sp : '') + ' <span style="color:#6b6b78">'+out+'</span>' + cc;
 }
-['upfront','perAppt','estimates','minDaily','days','niche'].forEach(id => $(id).addEventListener('input', renderPreview));
+['upfront','perAppt','estimates','minDaily','days','niche','business','contact','title','subtitle'].forEach(id => $(id).addEventListener('input', renderPreview));
 
 /* base64url-encode the token (matches agreement's decodeToken) */
 function encodeToken(obj){
@@ -207,7 +331,7 @@ function encodeToken(obj){
 
 /* Remember the last Whop checkout link per deal type (this browser only). */
 function whopKey(){ return 'rmb_whop_' + TYPE; }
-function loadWhop(){ $('whop').value = localStorage.getItem(whopKey()) || ''; }
+function loadWhop(){ if (PAY === 'whop') $('whop').value = localStorage.getItem(whopKey()) || ''; }
 $('whop').addEventListener('input', () => localStorage.setItem(whopKey(), $('whop').value.trim()));
 
 /* Auto-create the Whop checkout via the Cloudflare Worker (set WORKER_URL after deploy). */
@@ -220,7 +344,7 @@ $('mintBtn').addEventListener('click', async () => {
   setStatus('Creating Whop checkout…', '');
   $('mintBtn').disabled = true;
   try {
-    const label = encodeURIComponent((TYPE === 'pif' ? 'PIF ' : 'PAYG ') + ($('niche').value || 'Rambitious') + ' $' + price);
+    const label = encodeURIComponent(TYPE.toUpperCase()+' '+($('niche').value || 'Rambitious')+' $'+price);
     const r = await fetch(`${WORKER_URL}?price=${price}&label=${label}`);
     const resp = await r.json();
     if (resp.ok && resp.link) { $('whop').value = resp.link; localStorage.setItem(whopKey(), resp.link); setStatus('✓ ' + resp.plan_id, 'ok'); }
@@ -232,13 +356,25 @@ $('mintBtn').addEventListener('click', async () => {
 /* Generate the client link */
 $('genBtn').addEventListener('click', () => {
   const d = deal();
-  if (!d.upfront) { setStatus('Set a price first.', 'err'); return; }
-  const root = (d.flow === 'sign') ? AGREEMENT_URL : PAY_URL;   // sign-first opens the agreement; pay-first opens checkout
+  if (!d.upfront && d.payment === 'whop') { setStatus('Set a price first.', 'err'); return; }
+  if (d.payment === 'whop' && !d.whop) { setStatus('Paste (or auto-create) the Whop checkout link first.', 'err'); return; }
+
+  // pay-first opens the checkout; sign-first / agreement-only open the agreement
+  const root = (d.payment === 'whop' && d.flow === 'pay') ? PAY_URL : AGREEMENT_URL;
   const link = `${root}?t=${encodeToken(d)}`;
   $('clientLink').value = link;
-  $('outHint').innerHTML = (d.flow === 'sign')
-    ? 'They open it → <b>sign</b> the agreement → <b>pay</b> via Whop checkout. The signed PDF lands in your Drive + both inboxes.'
-    : 'They open it → <b>pay</b> via Whop checkout → <b>sign</b> the adapted agreement. The signed PDF lands in your Drive + both inboxes.';
+
+  let hint;
+  if (d.payment === 'none') hint = 'They open it → <b>sign</b>. The signed PDF lands in your Drive + both inboxes. No payment.';
+  else if (d.flow === 'sign') hint = 'They open it → <b>sign</b> → <b>pay</b> via Whop. The signed PDF lands in your Drive + both inboxes.';
+  else hint = 'They open it → <b>pay</b> via Whop → <b>sign</b> the adapted agreement. The signed PDF lands in your Drive + both inboxes.';
+  $('outHint').innerHTML = hint;
+
+  // link length sanity (URLs are robust, but warn on very long custom clauses)
+  const L = link.length, ls = $('lenStatus');
+  if (L > 1900){ ls.className='status warn'; ls.textContent='⚠ Link is '+L+' chars — long custom clauses. Test it once before sending.'; }
+  else { ls.className='status'; ls.textContent=''; }
+
   $('out').classList.add('show');
   $('out').scrollIntoView({ behavior: 'smooth' });
 });
@@ -248,6 +384,7 @@ function copy(id, btn){
   const t = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = t, 1400);
 }
 
+loadWhop();
 syncFields();
 </script>
 </body>

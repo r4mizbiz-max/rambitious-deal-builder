@@ -104,67 +104,191 @@ const SUCCESS_REDIRECT_URL = 'https://www.rambitiousmedia.com/urin';
 const SUPPLIER = { legal:'RAMBITIOUS LLC', dba:'Rambitious Media', addr:'41690 Enterprise Cir N, Temecula, CA 92592, United States', signer:'Ramiz Qumseya', title:'Founder' };
 
 /* ───────── token ───────── */
-function decodeToken(){
+function rawToken(){
   try{ const t=new URLSearchParams(location.search).get('t'); if(t) return JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))); }catch(e){}
   try{ const s=localStorage.getItem('rmb_deal'); if(s) return JSON.parse(s); }catch(e){}
   return null;
 }
-const DEAL = decodeToken();
+/* normalize legacy + v2 tokens into one shape */
+function normalize(raw){
+  if(!raw) return null;
+  var d = Object.assign({}, raw);
+  if(d.type === 'pif') d.type = 'program';        // legacy alias
+  if(!d.type) d.type = 'program';
+  if(d.adSpend == null) d.adSpend = (d.type === 'trial') ? 'agency' : 'client';   // legacy: trial = agency-funded, else client
+  if(d.payment == null) d.payment = 'whop';        // every legacy deal had a checkout
+  if(!d.flow) d.flow = 'sign';
+  if(d.payment === 'none') d.flow = 'sign';
+  d.signers = (Number(d.signers) === 2) ? 2 : 1;
+  d.custom = Array.isArray(d.custom) ? d.custom : [];
+  return d;
+}
+const DEAL = normalize(rawToken());
 function money(n){ return '$'+Number(n||0).toLocaleString('en-US'); }
 function todayStr(){ return new Date().toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'}); }
+const WORDS = { 1:'one (1)',2:'two (2)',3:'three (3)',5:'five (5)',7:'seven (7)',10:'ten (10)',14:'fourteen (14)',15:'fifteen (15)',20:'twenty (20)',21:'twenty-one (21)',30:'thirty (30)',31:'thirty-one (31)',45:'forty-five (45)',60:'sixty (60)',90:'ninety (90)' };
+function word(n){ return WORDS[n] || (n+' ('+n+')'); }
 
 /* derive the contract parameters from the deal */
-function params(){
-  const N   = Number(DEAL.estimates)||10;
-  const fee = Number(DEAL.upfront)||0;
-  const per = Number(DEAL.perAppt)>0 ? Number(DEAL.perAppt) : Math.round(fee/Math.max(N,1));
-  const day = Number(DEAL.minDaily)||150;
-  return { N, fee, per, day, week:day*7, period:Number(DEAL.days)||14, signers:(Number(DEAL.signers)===2?2:1) };
+function params(d){
+  const N   = Number(d.estimates)||0;
+  const fee = Number(d.upfront)||0;
+  const per = Number(d.perAppt)>0 ? Number(d.perAppt) : (N ? Math.round(fee/Math.max(N,1)) : fee);
+  const day = Number(d.minDaily)||0;
+  return {
+    N, fee, per, day, week:day*7, period:Number(d.days)||0,
+    signers:d.signers, type:d.type, adSpend:d.adSpend, payment:d.payment, flow:d.flow,
+    niche:String(d.niche||'').trim(), custom:d.custom,
+    title:String(d.title||'').trim(), subtitle:String(d.subtitle||'').trim()
+  };
 }
-const P = DEAL ? params() : null;
+const P = DEAL ? params(DEAL) : null;
+const hasFee = () => (P.fee > 0 || P.per > 0);
 
-/* ───────── the contract, as structured blocks (rendered to both HTML + PDF) ───────── */
-function blocks(P){
-  const word = { 10:'ten (10)', 14:'fourteen (14)', 20:'twenty (20)', 31:'thirty-one (31)' };
-  const N = word[P.N] || (P.N+' ('+P.N+')');
-  const D = word[P.period] || (P.period+' ('+P.period+')');
+/* default title / subtitle per type (overridable via token) */
+function titleFor(P){
+  if(P.title) return P.title;
+  return (P.type==='trial') ? 'Trial Service Agreement' : 'Service Agreement';
+}
+function subFor(P){
+  if(P.subtitle) return P.subtitle;
+  if(P.type==='program') return 'Guaranteed Appointment Delivery Program';
+  if(P.type==='payg')    return 'Pay-As-You-Go Appointment Program';
+  if(P.type==='trial')   return (P.period? P.period+'-Day ':'')+'Trial Engagement';
+  return 'Professional Services';
+}
+
+/* ═════════ COMPOSABLE CLAUSE LIBRARY ═════════
+   Each builder returns an array of block objects: {h},{h3},{p},{li,sub},{table}.
+   docBlocks(P) assembles them based on type / adSpend / payment so the contract,
+   the PDF, and the emails all stay in lockstep. */
+
+function adSpendServiceLi(P){
+  if(P.adSpend==='client') return [{li:'Management of the Customer’s advertising spend on the Customer’s behalf, funded by the Customer as set out in Schedule 2.'}];
+  if(P.adSpend==='agency') return [{li:'Funding and management of all advertising spend at the Supplier’s own cost, as set out in Schedule 2.'}];
+  return [];
+}
+
+function bgBlocks(P){
+  if(P.type==='trial') return [
+    {h:'Background'},
+    {p:'A. The Supplier provides managed lead generation, advertising, and appointment-setting services for contractors in the home-improvement and renovation sector.'},
+    {p:'B. The Parties wish to enter into a short-term trial engagement (the "Trial") to evaluate the Supplier’s services prior to committing to any longer-term arrangement.'},
+    {p:'C. This Agreement governs the Trial only. Any continuation of services beyond the Trial Period shall be governed by a separate written agreement executed by both Parties.'},
+  ];
+  if(P.type==='flat') return [
+    {h:'Background'},
+    {p:'A. The Supplier provides marketing, advertising, lead generation, and related growth services for contractors operating in the home-improvement and renovation sector.'},
+    {p:'B. The Customer wishes to engage the Supplier to provide the services described in this Agreement, and the Supplier agrees to be so engaged on the terms set out herein.'},
+  ];
+  // program / payg
   return [
     {h:'Background'},
     {p:'A. The Supplier provides fully managed lead generation, advertising, and appointment-setting services for contractors operating in the home-improvement and renovation sector.'},
     {p:'B. The Supplier designs, deploys, manages, and optimises advertising campaigns and operates a quality-assurance verification process for the purpose of delivering Verified Seated Appointments (as defined below) to the Customer.'},
-    {p:'C. Under this Agreement the Supplier offers a guaranteed appointment program whereby the Supplier commits to deliver a minimum number of Verified Seated Appointments within a defined period, subject to the terms set out herein.'},
+    (P.type==='program'
+      ? {p:'C. Under this Agreement the Supplier offers a guaranteed appointment program whereby the Supplier commits to deliver a minimum number of Verified Seated Appointments within a defined period, subject to the terms set out herein.'}
+      : {p:'C. Under this Agreement the Supplier delivers Verified Seated Appointments to the Customer on a pay-as-you-go basis, billed per appointment delivered, subject to the terms set out herein.'}),
     {p:'D. The Customer wishes to engage the Supplier on the terms of this Agreement, and the Supplier agrees to be so engaged.'},
+  ];
+}
 
+function servicesBlocks(P){
+  if(P.type==='flat'){
+    return [
+      {h:'Schedule 1 — Scope of Services'},
+      {h3:'1. Services Provided'},
+      {p:'The Supplier shall provide the following services (the "Services"):'},
+      {li:'Design, build, deployment, and ongoing management of marketing and lead generation activity on the Customer’s behalf.'},
+      {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+    ].concat(adSpendServiceLi(P)).concat([
+      {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
+      {p:'Any additional scope, deliverables, or special terms agreed between the Parties are set out in the General Terms below.'},
+    ]);
+  }
+  if(P.type==='trial'){
+    return [
+      {h:'Schedule 1 — Trial Service Details'},
+      {h3:'1. Services Provided'},
+      {p:'During the Trial Period, the Supplier shall provide the following services (the "Services"):'},
+      {li:'Design, build, and management of a lead generation and appointment-setting campaign on the Customer’s behalf.'},
+      {li:'Creation and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+    ].concat(adSpendServiceLi(P)).concat([
+      {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as Seated Appointments.'},
+      {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
+    ]);
+  }
+  // program / payg
+  return [
     {h:'Schedule 1 — Service Details'},
     {h3:'1. Services Provided'},
     {p:'The Supplier shall provide the following services (the "Services"):'},
     {li:'Design, build, deployment, and ongoing management of a fully managed lead generation and appointment-setting campaign.'},
     {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
-    {li:'Management of the Customer’s advertising spend on the Customer’s behalf, funded by the Customer as set out in Schedule 2.'},
+  ].concat(adSpendServiceLi(P)).concat([
     {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as appointments.'},
     {li:'Verification of seated and shown appointments through the Supplier’s quality-assurance process.'},
     {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
     {li:'Delivery of appointment details via email, SMS, calendar invitation, and/or client app notification, as applicable.'},
+  ]);
+}
+
+function vsaDefBlocks(P){
+  return [
     {h3:'2. Definition of a Verified Seated Appointment'},
     {p:'A "Verified Seated Appointment" means a scheduled estimate appointment that satisfies all of the following criteria:'},
     {li:'(a) the prospect has provided, at minimum, a valid name, phone number, property address, and email address;', sub:1},
     {li:'(b) the prospect’s property is located within the Customer’s agreed service area;', sub:1},
     {li:'(c) the prospect is a homeowner and/or an authorised decision-maker for the property, and is not a renter or non-decision-maker;', sub:1},
-    {li:'(d) the prospect’s project comprises a bathroom remodel, shower or tub conversion, or related bathroom renovation;', sub:1},
+    {li:'(d) the prospect’s project is within the Customer’s stated service category'+(P.niche?(' (e.g. '+P.niche+')'):'')+';', sub:1},
     {li:'(e) the prospect attended and was present (in person or, where expressly agreed, virtually) for the scheduled appointment at the agreed date and time — that is, the appointment was both "seated" and "shown"; and', sub:1},
     {li:'(f) the appointment has been confirmed as seated and shown through the Supplier’s verification process, which may include call recordings, confirmation communications, calendar and booking records, and other reasonable supporting evidence.', sub:1},
-    {p:'Only Verified Seated Appointments count toward the guarantee in Section 3. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, do not count toward the guarantee; the Supplier will continue delivering appointments until the guaranteed number of Verified Seated Appointments is reached, subject to the Guarantee Period.'},
+    (P.type==='program'
+      ? {p:'Only Verified Seated Appointments count toward the guarantee in Section 3. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, do not count toward the guarantee; the Supplier will continue delivering appointments until the guaranteed number of Verified Seated Appointments is reached, subject to the Guarantee Period.'}
+      : {p:'The Customer is billed only for Verified Seated Appointments. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, are not Verified Seated Appointments and are not billed.'}),
+  ];
+}
+
+function seatedDefBlocks(P){
+  return [
+    {h3:'3. Definition of a Seated Appointment'},
+    {p:'A "Seated Appointment" means a scheduled estimate appointment at which the prospect — a homeowner or authorised decision-maker located within the Customer’s agreed service area — attends and is present (in person or, where agreed, virtually) for the Customer to provide an estimate. No-shows, cancellations, and prospects that fail these criteria do not constitute Seated Appointments and are not billed.'},
+  ];
+}
+
+function guaranteeBlocks(P){
+  const N=word(P.N), D=word(P.period);
+  return [
     {h3:'3. Appointment Guarantee'},
     {p:'The Supplier guarantees that it will deliver a minimum of '+N+' Verified Seated Appointments to the Customer within '+D+' calendar days of the Campaign Launch Date (the "Guarantee Period").'},
     {p:'The "Campaign Launch Date" is the date on which the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier. The Guarantee Period shall be paused (tolled) for any period during which the campaign is suspended or paused due to non-payment, late payment, or any cause attributable to the Customer (see Schedule 2).'},
     {h3:'4. Shortfall — Pro-Rata Refund'},
     {p:'If, at the end of the Guarantee Period, the Supplier has delivered fewer than '+N+' Verified Seated Appointments, the Supplier shall refund the Customer '+money(P.per)+' for each Verified Seated Appointment not delivered below the guaranteed '+N+'.'},
-    {p:'For the avoidance of doubt, this pro-rata refund applies solely to the prepaid Appointment Package Fee set out in Schedule 2 and constitutes the Customer’s sole and exclusive remedy for any shortfall in the number of Verified Seated Appointments delivered. Advertising spend is paid to third-party advertising platforms and is non-refundable. Any refund due under this Section shall be paid within thirty (30) days following the end of the Guarantee Period.'},
-    {h3:'5. Verification, Disputes & Good Faith'},
+    {p:'For the avoidance of doubt, this pro-rata refund applies solely to the prepaid Appointment Package Fee set out in Schedule 2 and constitutes the Customer’s sole and exclusive remedy for any shortfall in the number of Verified Seated Appointments delivered.'+(P.adSpend==='client'?' Advertising spend is paid to third-party advertising platforms and is non-refundable.':'')+' Any refund due under this Section shall be paid within thirty (30) days following the end of the Guarantee Period.'},
+  ];
+}
+
+function verificationBlocks(P){
+  return [
+    {h3:(P.type==='program'?'5':'4')+'. Verification, Disputes & Good Faith'},
     {p:'Each appointment delivered under this Agreement is independently verified as seated and shown by the Supplier’s quality-assurance team. If the Customer wishes to dispute whether a particular appointment was seated and shown, the Customer must notify the Supplier in writing within forty-eight (48) hours of the scheduled appointment date and time, together with reasonable supporting information. The Supplier will review each timely dispute against its verification evidence and make a determination in good faith.'},
     {p:'Material breach — false or bad-faith disputes. If the Customer asserts that an appointment was not seated or shown and the Supplier’s verification evidence demonstrates that the appointment was in fact seated and shown, such conduct shall constitute a material breach of this Agreement and of the Customer’s duty of good faith. In that event, the Supplier may, at its sole discretion and with immediate effect, terminate this Agreement and treat all guarantees, services, and obligations of the Supplier under this Agreement as null and void. In such circumstances no refund, credit, or replacement of any kind shall be due to the Customer, and all fees previously paid shall be retained by the Supplier.'},
-    {h3:'6. No Guarantee of Sales or Revenue'},
-    {p:'The Supplier guarantees only the delivery of Verified Seated Appointments as expressly set out in this Agreement. The Supplier does not guarantee, represent, or warrant any particular sales, close rate, conversion rate, contract value, revenue, or return on investment. The Customer is solely responsible for conducting estimates, sales conversations, pricing, follow-up, and the closing of any business.'},
+  ];
+}
+
+function noSalesBlock(){
+  return [
+    {h3:'No Guarantee of Sales or Revenue'},
+    {p:'The Supplier does not guarantee, represent, or warrant any particular sales, close rate, conversion rate, contract value, revenue, or return on investment. The Customer is solely responsible for conducting estimates, sales conversations, pricing, follow-up, and the closing of any business.'},
+  ];
+}
+
+function custRespBlocks(P){
+  if(P.type==='trial' || P.type==='flat') return [
+    {h3:'Customer Responsibilities'},
+    {p:'The Customer shall maintain a reachable phone number and email address, attend or be available for scheduled appointments, report appointment outcomes within forty-eight (48) hours, and not interfere with the advertising campaigns, creative, ad accounts, or platform assets managed by the Supplier.'},
+  ];
+  return [
     {h3:'7. Customer Responsibilities'},
     {p:'The Customer agrees to:'},
     {li:'Maintain an active, monitored, and reachable phone number and email address throughout the engagement.'},
@@ -172,26 +296,98 @@ function blocks(P){
     {li:'Act in good faith with respect to appointment attendance, verification, and any disputes.'},
     {li:'Not interfere with, alter, pause, or take control of the advertising campaigns, creative, ad accounts, or platform assets managed by the Supplier.'},
     {p:'Where a prospect attends or is available for a scheduled appointment but the Customer fails to attend, is unreachable, or is otherwise at fault, that appointment shall nonetheless count as a delivered Verified Seated Appointment.'},
+  ];
+}
 
-    {h:'Schedule 2 — Charges & Payment'},
-    {h3:'1. Fee Structure'},
-    {table:[
-      ['Fee Type','Amount'],
-      ['Appointment Package Fee ('+P.N+' Verified Seated Appointments @ '+money(P.per)+' each)', money(P.fee)+' USD — one-time, payable in full on signing'],
-      ['Advertising Spend (funded by the Customer)', money(P.day)+' USD per day, invoiced weekly at '+money(P.week)+' per 7-day period'],
-      ['Per-Appointment Valuation (for shortfall refund calculation)', money(P.per)+' USD per appointment'],
-    ]},
-    {h3:'2. Payment Terms'},
-    {p:'(a) Appointment Package Fee. The Appointment Package Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date. This fee is non-refundable except as expressly provided under the pro-rata refund in Schedule 1, Section 4.'},
-    {p:'(b) Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.'},
-    {p:'(c) Authorisation. The Customer authorises the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.'},
-    {p:'(d) Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of the campaign at the Supplier’s discretion. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.'},
-    {h3:'3. Subsequent Billing Cycles (Renewal)'},
-    {p:'Once the Supplier has delivered the guaranteed '+N+' Verified Seated Appointments, the then-current cycle shall be deemed fulfilled. Continuation into a subsequent cycle, together with continued advertising spend, shall commence only upon the written agreement of both Parties. The Supplier is under no obligation to commence a subsequent cycle, and the Customer is under no obligation to renew.'},
+/* ad-spend row + payment clause used in Schedule 2 */
+function adSpendRow(P){
+  if(P.adSpend==='client') return ['Advertising Spend (funded by the Customer)', money(P.day)+' USD per day, invoiced weekly at '+money(P.week)+' per 7-day period'];
+  if(P.adSpend==='agency') return ['Advertising Spend', 'Covered by the Supplier at its own cost (no cost to the Customer)'];
+  return null;
+}
 
+function chargesBlocks(P){
+  // No fee at all → minimal clause
+  if(!hasFee()){
+    var out=[{h:'Schedule 2 — Charges & Payment'},{p:'No fees are payable by the Customer under this Agreement.'}];
+    var r=adSpendRow(P);
+    if(P.adSpend==='client' && r){ out.push({p:'Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. Advertising spend is paid to third-party advertising platforms and is non-refundable.'}); }
+    if(P.adSpend==='agency'){ out.push({p:'The Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend.'}); }
+    return out;
+  }
+
+  var rows = [['Fee Type','Amount']];
+  var feeBody = null;   // lead payment clause (no letter — auto-lettered below); null if no upfront fee
+  if(P.type==='program'){
+    if(P.fee>0){
+      rows.push(['Appointment Package Fee ('+P.N+' Verified Seated Appointments @ '+money(P.per)+' each)', money(P.fee)+' USD — one-time, payable in full on signing']);
+      feeBody = 'Appointment Package Fee. The Appointment Package Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date. This fee is non-refundable except as expressly provided under the pro-rata refund in Schedule 1, Section 4.';
+    }
+  } else if(P.type==='trial'){
+    if(P.fee>0){
+      rows.push(['Trial Setup Fee', money(P.fee)+' USD — one-time, payable in full on signing']);
+      feeBody = 'The Trial Setup Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and is non-refundable.';
+    }
+    if(P.per>0) rows.push(['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment delivered']);
+  } else if(P.type==='payg'){
+    if(P.fee>0){
+      rows.push(['Upfront / Setup Fee', money(P.fee)+' USD — one-time, payable in full on signing']);
+      feeBody = 'Upfront Fee. The upfront fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date and is non-refundable.';
+    }
+    if(P.per>0) rows.push(['Per-Appointment Fee', money(P.per)+' USD per showed appointment']);
+  } else { // flat
+    if(P.fee>0){
+      rows.push(['Service Fee', money(P.fee)+' USD — one-time, payable in full on signing']);
+      feeBody = 'Service Fee. The service fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and is non-refundable.';
+    }
+  }
+  var adRow = adSpendRow(P);
+  if(adRow) rows.push(adRow);
+  if(P.type==='program') rows.push(['Per-Appointment Valuation (for shortfall refund calculation)', money(P.per)+' USD per appointment']);
+
+  // payment-terms sub-clauses — collected independently, then auto-lettered (a),(b),(c)…
+  var clauses = [];
+  if(feeBody) clauses.push(feeBody);
+  if(P.type==='trial' && P.per>0) clauses.push('The Per-Seated-Appointment Fee of '+money(P.per)+' USD is billed automatically upon confirmation of each Seated Appointment delivered during the Trial.');
+  else if(P.type==='payg' && P.per>0) clauses.push('Per-Appointment Fee. The Per-Appointment Fee of '+money(P.per)+' USD is billed upon confirmation of each showed appointment delivered.');
+  if(P.adSpend==='client') clauses.push('Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.');
+  else if(P.adSpend==='agency') clauses.push('Advertising Spend. The Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend.');
+  clauses.push('Authorisation. The Customer authorises the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.');
+  clauses.push('Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of services at the Supplier’s discretion'+(P.type==='program'?'. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.':'.'));
+
+  var out = [{h:'Schedule 2 — Charges & Payment'},{h3:'1. Fee Structure'},{table:rows},{h3:'2. Payment Terms'}];
+  var L = 'abcdefghij';
+  clauses.forEach(function(c,i){ out.push({p:'('+L[i]+') '+c}); });
+
+  if(P.type==='program'){
+    out.push({h3:'3. Subsequent Billing Cycles (Renewal)'});
+    out.push({p:'Once the Supplier has delivered the guaranteed '+word(P.N)+' Verified Seated Appointments, the then-current cycle shall be deemed fulfilled. Continuation into a subsequent cycle, together with continued advertising spend, shall commence only upon the written agreement of both Parties. The Supplier is under no obligation to commence a subsequent cycle, and the Customer is under no obligation to renew.'});
+  }
+  return out;
+}
+
+function trialReviewBlocks(P){
+  const D = word(P.period);
+  return [
+    {h:'Schedule 3 — Trial Period & Review'},
+    {p:'The "Trial Period" is the period of '+D+' calendar days commencing on the Campaign Launch Date (the date the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier).'},
+    {p:'At the end of the Trial Period, the Parties shall reconvene to review the outcome of the Trial. One of the following shall then apply:'},
+    {li:'(a) Termination. If either Party elects not to continue, this Agreement shall automatically terminate and become void, and no further services shall be delivered. Any fees already paid for services rendered during the Trial are non-refundable, and neither Party shall have any further obligation to the other.', sub:1},
+    {li:'(b) Continuation. If both Parties elect to continue, they shall in good faith agree upon revised terms reflecting the outcome of the Trial (including, without limitation, pricing, volume, and advertising-spend arrangements) and shall execute a separate written agreement. Continued services shall be governed solely by that subsequent agreement, and this Trial Agreement shall be superseded upon its execution.', sub:1},
+    {p:'For the avoidance of doubt, neither Party is obligated to continue beyond the Trial Period, and any continuation is conditional upon the execution of a new written agreement.'},
+  ];
+}
+
+function generalBlocks(P){
+  var termP;
+  if(P.type==='program') termP = 'This Agreement commences on the Effective Date and continues until the guaranteed '+word(P.N)+' Verified Seated Appointments have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. Except for the pro-rata refund expressly provided in Schedule 1, Section 4, all fees paid are non-refundable'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
+  else if(P.type==='trial') termP = 'This Agreement commences on the Effective Date and governs the Trial only. Any continuation beyond the Trial Period requires a new written agreement signed by both Parties. All fees paid for services rendered during the Trial are non-refundable.';
+  else termP = 'This Agreement commences on the Effective Date and continues until all Services have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. All fees paid are non-refundable'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
+
+  var out = [
     {h:'General Terms'},
     {h3:'Term & Termination'},
-    {p:'This Agreement commences on the Effective Date and continues until the guaranteed '+N+' Verified Seated Appointments have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. Except for the pro-rata refund expressly provided in Schedule 1, Section 4, all fees paid are non-refundable, and advertising spend is non-refundable in all circumstances.'},
+    {p:termP},
     {h3:'Independent Contractor'},
     {p:'The Supplier is engaged as an independent contractor. Nothing in this Agreement creates a partnership, joint venture, agency, franchise, or employment relationship between the Parties.'},
     {h3:'Use of Client Results'},
@@ -199,7 +395,7 @@ function blocks(P){
     {h3:'Confidentiality'},
     {p:'Each Party agrees to keep confidential any non-public information about the other Party’s business, customers, strategies, processes, pricing, systems, and operations, both during and after the term of this Agreement, except as necessary to perform the Services or as required by law.'},
     {h3:'Limitation of Liability'},
-    {p:'To the maximum extent permitted by applicable law, the Supplier’s total aggregate liability arising out of or in connection with this Agreement shall not exceed the total Appointment Package Fees actually paid by the Customer under the then-current cycle (excluding advertising spend). In no event shall the Supplier be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages.'},
+    {p:'To the maximum extent permitted by applicable law, the Supplier’s total aggregate liability arising out of or in connection with this Agreement shall not exceed the total fees actually paid by the Customer under this Agreement'+(P.adSpend==='client'?' (excluding advertising spend)':'')+'. In no event shall the Supplier be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages.'},
     {h3:'Force Majeure'},
     {p:'Neither Party shall be liable for any failure or delay in performance (other than payment obligations) caused by events beyond its reasonable control, including acts of God, natural disasters, governmental action, internet or utility outages, and the acts, policy changes, suspensions, or restrictions imposed by third-party advertising platforms.'},
     {h3:'Governing Law & Jurisdiction'},
@@ -207,72 +403,70 @@ function blocks(P){
     {h3:'Entire Agreement & Severability'},
     {p:'This Agreement constitutes the entire agreement between the Parties regarding its subject matter and supersedes all prior discussions, representations, or agreements. If any provision is found invalid or unenforceable, the remaining provisions shall remain in full force and effect.'},
   ];
+  // appended custom clauses
+  (P.custom||[]).forEach(function(c){
+    if(c.h) out.push({h3:c.h});
+    if(c.p) out.push({p:c.p});
+  });
+  return out;
 }
 
-/* ───────── the TRIAL agreement (agency-covered ad spend, 14-day review) ───────── */
-function trialBlocks(P){
-  const D = (P.period===14)?'fourteen (14)':(P.period+' ('+P.period+')');
-  return [
-    {h:'Background'},
-    {p:'A. The Supplier provides managed lead generation, advertising, and appointment-setting services for contractors in the home-improvement and renovation sector.'},
-    {p:'B. The Parties wish to enter into a short-term trial engagement (the "Trial") to evaluate the Supplier’s services prior to committing to any longer-term arrangement.'},
-    {p:'C. This Agreement governs the Trial only. Any continuation of services beyond the Trial Period shall be governed by a separate written agreement executed by both Parties.'},
-
-    {h:'Schedule 1 — Trial Service Details'},
-    {h3:'1. Services Provided'},
-    {p:'During the Trial Period, the Supplier shall provide the following services (the "Services"):'},
-    {li:'Design, build, and management of a lead generation and appointment-setting campaign on the Customer’s behalf.'},
-    {li:'Creation and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
-    {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as Seated Appointments.'},
-    {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
-    {h3:'2. Advertising Spend — Covered by the Supplier'},
-    {p:'For the duration of the Trial Period, the Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend during the Trial.'},
-    {h3:'3. Definition of a Seated Appointment'},
-    {p:'A "Seated Appointment" means a scheduled estimate appointment at which the prospect — a homeowner or authorised decision-maker located within the Customer’s agreed service area — attends and is present (in person or, where agreed, virtually) for the Customer to provide an estimate. No-shows, cancellations, and prospects that fail these criteria do not constitute Seated Appointments and are not billed.'},
-
-    {h:'Schedule 2 — Charges & Payment'},
-    {h3:'1. Fee Structure'},
-    {table:[
-      ['Fee Type','Amount'],
-      ['Trial Setup Fee', money(P.fee)+' USD — one-time, payable in full on signing'],
-      ['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment delivered'],
-      ['Advertising Spend', 'Covered by the Supplier during the Trial (no cost to the Customer)'],
-    ]},
-    {h3:'2. Payment Terms'},
-    {p:'(a) The Trial Setup Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and is non-refundable.'},
-    {p:'(b) The Per-Seated-Appointment Fee of '+money(P.per)+' USD is billed automatically upon confirmation of each Seated Appointment delivered during the Trial.'},
-    {p:'(c) The Customer authorises the Supplier and its payment processor to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.'},
-
-    {h:'Schedule 3 — Trial Period & Review'},
-    {p:'The "Trial Period" is the period of '+D+' calendar days commencing on the Campaign Launch Date (the date the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier).'},
-    {p:'At the end of the Trial Period, the Parties shall reconvene to review the outcome of the Trial. One of the following shall then apply:'},
-    {li:'(a) Termination. If either Party elects not to continue, this Agreement shall automatically terminate and become void, and no further services shall be delivered. Any fees already paid for services rendered during the Trial are non-refundable, and neither Party shall have any further obligation to the other.', sub:1},
-    {li:'(b) Continuation. If both Parties elect to continue, they shall in good faith agree upon revised terms reflecting the outcome of the Trial (including, without limitation, pricing, volume, and advertising-spend arrangements) and shall execute a separate written agreement. Continued services shall be governed solely by that subsequent agreement, and this Trial Agreement shall be superseded upon its execution.', sub:1},
-    {p:'For the avoidance of doubt, neither Party is obligated to continue beyond the Trial Period, and any continuation is conditional upon the execution of a new written agreement.'},
-
-    {h:'General Terms'},
-    {h3:'No Guarantee of Sales or Revenue'},
-    {p:'The Supplier does not guarantee any particular number of appointments, sales, close rate, revenue, or return on investment during the Trial. The outcome of any appointment depends on factors within the Customer’s control, including the Customer’s sales process, pricing, and professionalism.'},
-    {h3:'Customer Responsibilities'},
-    {p:'The Customer shall maintain a reachable phone number and email address, attend or be available for scheduled appointments, report appointment outcomes within forty-eight (48) hours, and not interfere with the advertising campaigns or assets managed by the Supplier.'},
-    {h3:'Use of Client Results'},
-    {p:'The Customer grants Rambitious Media the right to use performance results and campaign outcomes for marketing, promotional, and educational purposes. Confidential information will be excluded unless separately consented to in writing.'},
-    {h3:'Limitation of Liability'},
-    {p:'To the maximum extent permitted by law, the Supplier’s total aggregate liability under this Agreement shall not exceed the total fees actually paid by the Customer under this Trial Agreement. In no event shall the Supplier be liable for any indirect, incidental, consequential, or punitive damages.'},
-    {h3:'Governing Law & Jurisdiction'},
-    {p:'This Agreement shall be governed by the laws of the State of California, and any dispute shall be brought exclusively in the state or federal courts located in California.'},
-    {h3:'Entire Agreement & Severability'},
-    {p:'This Agreement constitutes the entire agreement between the Parties regarding the Trial and supersedes all prior discussions. If any provision is found invalid, the remaining provisions shall remain in full force and effect. Any continuation beyond the Trial requires a new written agreement signed by both Parties.'},
-  ];
+/* assemble the full ordered block list for this deal */
+function docBlocks(P){
+  var b = [];
+  b = b.concat(bgBlocks(P));
+  b = b.concat(servicesBlocks(P));
+  if(P.type==='program' || P.type==='payg'){
+    b = b.concat(vsaDefBlocks(P));
+    if(P.type==='program'){ b = b.concat(guaranteeBlocks(P)); }
+    b = b.concat(verificationBlocks(P));
+    b = b.concat(custRespBlocks(P));
+    b = b.concat(chargesBlocks(P));
+    b = b.concat(noSalesBlock());
+  } else if(P.type==='trial'){
+    b = b.concat(seatedDefBlocks(P));
+    b = b.concat(chargesBlocks(P));
+    b = b.concat(trialReviewBlocks(P));
+    b = b.concat(noSalesBlock());
+    b = b.concat(custRespBlocks(P));
+  } else { // flat
+    b = b.concat(chargesBlocks(P));
+    b = b.concat(noSalesBlock());
+    b = b.concat(custRespBlocks(P));
+  }
+  b = b.concat(generalBlocks(P));
+  return b;
 }
 
-const IS_TRIAL = DEAL && DEAL.type === 'trial';
-const docBlocks = () => IS_TRIAL ? trialBlocks(P) : blocks(P);
+/* executed-terms summary (drives the emails so they match the contract exactly) */
+function termsRows(P){
+  var rows = [];
+  if(P.type==='program'){
+    rows.push(['Appointment Package Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
+    rows.push(['Appointments Guaranteed', P.N+' Verified Seated Appointments']);
+    rows.push(['Guarantee Period', P.period+' calendar days from Campaign Launch Date']);
+  } else if(P.type==='trial'){
+    if(P.fee>0) rows.push(['Trial Setup Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
+    if(P.per>0) rows.push(['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment']);
+    if(P.period) rows.push(['Trial Period', P.period+' calendar days from Campaign Launch Date']);
+  } else if(P.type==='payg'){
+    if(P.fee>0) rows.push(['Upfront / Setup Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
+    rows.push(['Per-Appointment Fee', money(P.per)+' USD per showed appointment']);
+  } else {
+    if(P.fee>0) rows.push(['Service Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
+  }
+  if(P.adSpend==='client')      rows.push(['Advertising Spend', money(P.day)+' USD per day — funded by Customer, invoiced weekly']);
+  else if(P.adSpend==='agency') rows.push(['Advertising Spend', 'Covered by Rambitious LLC (no cost to Customer)']);
+  if(P.type==='program')        rows.push(['Per-Appointment Valuation', money(P.per)+' USD (shortfall refund basis)']);
+  if(!rows.length)              rows.push(['Fees', 'No fees payable under this Agreement']);
+  return rows;
+}
 
 /* ───────── render the on-screen contract ───────── */
 function renderDoc(){
-  if (IS_TRIAL){ document.getElementById('docTitle').textContent='Trial Service Agreement'; document.getElementById('docSub').textContent=P.period+'-Day Trial Engagement'; }
-  const B = docBlocks();
+  document.getElementById('docTitle').textContent = titleFor(P);
+  document.getElementById('docSub').textContent = subFor(P);
+  const B = docBlocks(P);
   let html = '';
   B.forEach(b=>{
     if(b.h) html += '<h2>'+b.h+'</h2>';
@@ -305,13 +499,15 @@ function buildSigners(){
   wrap.innerHTML = html;
   for(let i=1;i<=n;i++) initPad(i);
   document.querySelectorAll('.sigclear').forEach(b=> b.addEventListener('click',()=>{ const p=pads[b.dataset.pad]; if(p) p.clear(); }));
+  // prefill from token
+  if(DEAL.business && !document.getElementById('business').value) document.getElementById('business').value = DEAL.business;
+  if(DEAL.contact && document.getElementById('name1')) document.getElementById('name1').value = DEAL.contact;
 }
 function initPad(i){
   const c=document.getElementById('pad'+i); const ratio=Math.max(window.devicePixelRatio||1,1);
   c.width=c.offsetWidth*ratio; c.height=c.offsetHeight*ratio; c.getContext('2d').scale(ratio,ratio);
   pads[i]=new SignaturePad(c,{backgroundColor:'rgba(0,0,0,0)',penColor:'#0f1320',minWidth:.8,maxWidth:2});
 }
-/* black-on-white export for PDF (pad is transparent on white card here, so just export) */
 function sigPNG(i){ const p=pads[i]; if(!p||p.isEmpty()) return null; try{ return p.toDataURL('image/png'); }catch(e){ return null; } }
 
 /* ───────── PDF ───────── */
@@ -321,14 +517,14 @@ function buildPDF(C){
   const PW=doc.internal.pageSize.getWidth(), PH=doc.internal.pageSize.getHeight();
   const M=64, MAXW=PW-M*2; let y=M;
   const NAVY=[31,58,95];
-  function header(){ doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(150,150,150); doc.text('Rambitious Media — Service Agreement', PW-M, 40, {align:'right'}); }
+  const TITLE = titleFor(P), SUBT = subFor(P);
+  function header(){ doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(150,150,150); doc.text('Rambitious Media — '+TITLE, PW-M, 40, {align:'right'}); }
   function need(h){ if(y+h>PH-60){ doc.addPage(); y=M; header(); } }
   function H2(t){ need(40); y+=10; doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(...NAVY); doc.text(t.toUpperCase(),M,y); y+=6; doc.setDrawColor(...NAVY); doc.setLineWidth(1.2); doc.line(M,y,PW-M,y); y+=14; }
   function H3(t){ need(26); y+=6; doc.setFont('times','bold'); doc.setFontSize(11); doc.setTextColor(20,20,20); doc.text(t,M,y); y+=14; }
   function PARA(t,opts){ opts=opts||{}; doc.setFont('times', opts.bold?'bold':'normal'); doc.setFontSize(10.5); doc.setTextColor(45,50,70); const ind=opts.ind||0; const lines=doc.splitTextToSize(t,MAXW-ind); lines.forEach(l=>{ need(15); doc.text(l,M+ind,y); y+=14.5; }); y+=4; }
   function LI(t,sub){ const ind=sub?22:14; doc.setFont('times','normal'); doc.setFontSize(10.5); doc.setTextColor(45,50,70); const lines=doc.splitTextToSize(t.replace(/^\(/,'(') , MAXW-ind-8); lines.forEach((l,k)=>{ need(15); if(k===0 && !sub){ doc.text('•',M+4,y); } doc.text(l,M+ind,y); y+=14.5; }); y+=2; }
   function TABLE(rows){ const x0=M, cw=[MAXW*0.52, MAXW*0.48]; need(30);
-    // header
     doc.setFillColor(...NAVY); doc.rect(x0,y,MAXW,22,'F'); doc.setFont('times','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
     doc.text(rows[0][0],x0+8,y+15); doc.text(rows[0][1],x0+cw[0]+8,y+15); y+=22;
     doc.setTextColor(40,40,40);
@@ -342,11 +538,10 @@ function buildPDF(C){
   }
 
   header();
-  // title block
-  doc.setFont('times','bold'); doc.setFontSize(28); doc.setTextColor(...NAVY); doc.text(IS_TRIAL?'TRIAL SERVICE AGREEMENT':'SERVICE AGREEMENT', PW/2, y+18, {align:'center'});
-  doc.setFont('times','italic'); doc.setFontSize(13); doc.setTextColor(90,90,90); doc.text(IS_TRIAL?(P.period+'-Day Trial Engagement'):'Guaranteed Appointment Delivery Program', PW/2, y+40, {align:'center'});
+  doc.setFont('times','bold'); doc.setFontSize(28); doc.setTextColor(...NAVY); doc.text(TITLE.toUpperCase(), PW/2, y+18, {align:'center'});
+  if(SUBT){ doc.setFont('times','italic'); doc.setFontSize(13); doc.setTextColor(90,90,90); doc.text(SUBT, PW/2, y+40, {align:'center'}); }
   doc.setDrawColor(...NAVY); doc.setLineWidth(2); doc.line(M,y+54,PW-M,y+54); y+=78;
-  PARA('This Service Agreement (the "Agreement") is entered into as of '+todayStr()+' (the "Effective Date") by and between the parties identified below.');
+  PARA('This '+TITLE+' (the "Agreement") is entered into as of '+todayStr()+' (the "Effective Date") by and between the parties identified below.');
 
   H2('Parties');
   H3('1. Supplier');
@@ -360,7 +555,7 @@ function buildPDF(C){
   y+=4;
   PARA('The individual(s) signing this Agreement represent and warrant that they have full authority to bind the Customer (the "Customer"; the Supplier and the Customer each a "Party").');
 
-  blocks(P).forEach(b=>{
+  docBlocks(P).forEach(b=>{
     if(b.h) H2(b.h); else if(b.h3) H3(b.h3); else if(b.p) PARA(b.p); else if(b.li) LI(b.li, b.sub); else if(b.table) TABLE(b.table);
   });
 
@@ -379,14 +574,12 @@ function buildPDF(C){
   for(let i=0;i<P.signers;i++){
     drawSig(P.signers===2?('Customer — Partner '+(i+1)):'Customer', C.sigs[i], C.names[i], C.titles[i]);
   }
-  // supplier
   need(110); doc.setFont('times','bold'); doc.setFontSize(11); doc.setTextColor(...NAVY); doc.text('Rambitious LLC',M,y); y+=8;
   doc.setFont('times','italic'); doc.setFontSize(15); doc.setTextColor(70,70,70); doc.text(SUPPLIER.signer, M, y+22); y+=34;
   doc.setDrawColor(120,120,120); doc.line(M,y,M+260,y); y+=12;
   doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(60,60,60);
   doc.text('Name: '+SUPPLIER.signer+', '+SUPPLIER.title,M,y); y+=13; doc.text('Date: '+todayStr(),M,y);
 
-  // footers
   const pc=doc.internal.getNumberOfPages();
   for(let i=1;i<=pc;i++){ doc.setPage(i); doc.setFont('times','normal'); doc.setFontSize(8.5); doc.setTextColor(150,150,150); doc.text('Page '+i+' of '+pc+' | Confidential', PW/2, PH-36, {align:'center'}); }
   return doc.output('datauristring');
@@ -416,15 +609,18 @@ function wireSubmit(){
         body: JSON.stringify({
           businessName:C.business, fullName:C.names.join(' & '), email:C.email,
           niche:(DEAL.niche||''), rate:P.per,
-          dealType:DEAL.type, upfront:P.fee, perAppt:P.per, estimates:P.N, minDaily:P.day, days:P.period, signers:P.signers,
+          dealType:P.type, agreementType:titleFor(P), agreementSubtitle:subFor(P),
+          adSpend:P.adSpend, payment:P.payment, flow:P.flow,
+          upfront:P.fee, perAppt:P.per, estimates:P.N, minDaily:P.day, days:P.period, signers:P.signers,
           phone:C.phone, address:C.address,
+          termsRows: termsRows(P),
           signedAtPretty:new Date().toLocaleString('en-US',{dateStyle:'long',timeStyle:'short'}),
           pdfBase64:base,
         }) });
       await new Promise(r=>setTimeout(r,700));
       try{ localStorage.removeItem('rmb_deal'); }catch(e){}
-      // sign-first: after signing, send them to the Whop checkout to pay. pay-first: already paid → thank-you.
-      if (DEAL.flow === 'sign' && DEAL.whop) { window.location.href = DEAL.whop; }
+      // sign-first WITH payment → send to Whop checkout. agreement-only or pay-first → thank-you.
+      if (P.payment === 'whop' && P.flow === 'sign' && DEAL.whop) { window.location.href = DEAL.whop; }
       else { window.location.href = SUCCESS_REDIRECT_URL; }
     }catch(e){ btn.disabled=false; btn.textContent='Sign & Submit Agreement'; showErr('Submission failed: '+(e.message||'unknown')); }
   });

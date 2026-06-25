@@ -10,6 +10,7 @@ you + the signer all adapt to the deal you configured.
 - **Ad spend funded by** — Client (min $/day) · Rambitious (we cover it) · N/A
 - **Output** — Agreement **+ Payment** (Whop checkout) · **Agreement only** (no payment)
 - **Flow** — Sign first (sign → pay) · Pay first (pay → sign). Locked to "sign" when agreement-only.
+- **After they sign** (sign-first only) — send them to your **branded /pay page** → Whop, or **straight to the raw Whop link**.
 - **Signers** — 1 or 2
 - All numbers (fee, per-appointment, appointments guaranteed, min daily spend, window)
 - Optional pre-fill of business + signer name
@@ -48,8 +49,8 @@ Then re-deploy (**New version**) so the dynamic emails + `createWhopPlan` go liv
 
 ## The token (`?t=`)
 base64url(JSON) of the deal spec:
-`{ v:2, type, adSpend, payment, flow, signers, upfront, perAppt, estimates, minDaily, days,
-   niche, business, contact, title, subtitle, whop, custom:[{h,p}…] }`
+`{ v:2, type, adSpend, payment, flow, payStyle, signers, upfront, perAppt, estimates, minDaily,
+   days, niche, business, contact, title, subtitle, whop, custom:[{h,p}…] }`
 Not sensitive — just deal terms + the public checkout link. **Legacy `pif`/`payg`/`trial` tokens
 still render** (they normalize: `pif → program`, trial defaults to agency-funded spend).
 

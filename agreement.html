@@ -101,6 +101,7 @@
 /* ───────── CONFIG ───────── */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMvap-Yonchi1i52zb4fUnD85yxAFMMf3UKOdzf6ccufcvX-h4Bhcg4va8xVG4XZoxCw/exec';
 const SUCCESS_REDIRECT_URL = 'https://www.rambitiousmedia.com/urin';
+const PAY_URL = 'https://www.rambitiousmedia.com/pay';   // branded checkout page (used for the "branded" post-sign style)
 const SUPPLIER = { legal:'RAMBITIOUS LLC', dba:'Rambitious Media', addr:'41690 Enterprise Cir N, Temecula, CA 92592, United States', signer:'Ramiz Qumseya', title:'Founder' };
 
 /* ───────── token ───────── */
@@ -108,6 +109,11 @@ function rawToken(){
   try{ const t=new URLSearchParams(location.search).get('t'); if(t) return JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))); }catch(e){}
   try{ const s=localStorage.getItem('rmb_deal'); if(s) return JSON.parse(s); }catch(e){}
   return null;
+}
+/* re-encode the deal (base64url) — used to forward the token to the branded /pay page */
+function encodeToken(obj){
+  var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 /* normalize legacy + v2 tokens into one shape */
 function normalize(raw){
@@ -185,7 +191,7 @@ function bgBlocks(P){
   return [
     {h:'Background'},
     {p:'A. The Supplier provides fully managed lead generation, advertising, and appointment-setting services for contractors operating in the home-improvement and renovation sector.'},
-    {p:'B. The Supplier designs, deploys, manages, and optimises advertising campaigns and operates a quality-assurance verification process for the purpose of delivering Verified Seated Appointments (as defined below) to the Customer.'},
+    {p:'B. The Supplier designs, deploys, manages, and optimizes advertising campaigns and operates a quality-assurance verification process for the purpose of delivering Verified Seated Appointments (as defined below) to the Customer.'},
     (P.type==='program'
       ? {p:'C. Under this Agreement the Supplier offers a guaranteed appointment program whereby the Supplier commits to deliver a minimum number of Verified Seated Appointments within a defined period, subject to the terms set out herein.'}
       : {p:'C. Under this Agreement the Supplier delivers Verified Seated Appointments to the Customer on a pay-as-you-go basis, billed per appointment delivered, subject to the terms set out herein.'}),
@@ -200,7 +206,7 @@ function servicesBlocks(P){
       {h3:'1. Services Provided'},
       {p:'The Supplier shall provide the following services (the "Services"):'},
       {li:'Design, build, deployment, and ongoing management of marketing and lead generation activity on the Customer’s behalf.'},
-      {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+      {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimization across advertising platforms (including, without limitation, Meta platforms).'},
     ].concat(adSpendServiceLi(P)).concat([
       {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
       {p:'Any additional scope, deliverables, or special terms agreed between the Parties are set out in the General Terms below.'},
@@ -212,7 +218,7 @@ function servicesBlocks(P){
       {h3:'1. Services Provided'},
       {p:'During the Trial Period, the Supplier shall provide the following services (the "Services"):'},
       {li:'Design, build, and management of a lead generation and appointment-setting campaign on the Customer’s behalf.'},
-      {li:'Creation and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+      {li:'Creation and management of advertising creative, audience targeting, and campaign optimization across advertising platforms (including, without limitation, Meta platforms).'},
     ].concat(adSpendServiceLi(P)).concat([
       {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as Seated Appointments.'},
       {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
@@ -224,7 +230,7 @@ function servicesBlocks(P){
     {h3:'1. Services Provided'},
     {p:'The Supplier shall provide the following services (the "Services"):'},
     {li:'Design, build, deployment, and ongoing management of a fully managed lead generation and appointment-setting campaign.'},
-    {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimisation across advertising platforms (including, without limitation, Meta platforms).'},
+    {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimization across advertising platforms (including, without limitation, Meta platforms).'},
   ].concat(adSpendServiceLi(P)).concat([
     {li:'Scheduling of qualified prospects into the Customer’s booking system or calendar as appointments.'},
     {li:'Verification of seated and shown appointments through the Supplier’s quality-assurance process.'},
@@ -239,7 +245,7 @@ function vsaDefBlocks(P){
     {p:'A "Verified Seated Appointment" means a scheduled estimate appointment that satisfies all of the following criteria:'},
     {li:'(a) the prospect has provided, at minimum, a valid name, phone number, property address, and email address;', sub:1},
     {li:'(b) the prospect’s property is located within the Customer’s agreed service area;', sub:1},
-    {li:'(c) the prospect is a homeowner and/or an authorised decision-maker for the property, and is not a renter or non-decision-maker;', sub:1},
+    {li:'(c) the prospect is a homeowner and/or an authorized decision-maker for the property, and is not a renter or non-decision-maker;', sub:1},
     {li:'(d) the prospect’s project is within the Customer’s stated service category'+(P.niche?(' (e.g. '+P.niche+')'):'')+';', sub:1},
     {li:'(e) the prospect attended and was present (in person or, where expressly agreed, virtually) for the scheduled appointment at the agreed date and time — that is, the appointment was both "seated" and "shown"; and', sub:1},
     {li:'(f) the appointment has been confirmed as seated and shown through the Supplier’s verification process, which may include call recordings, confirmation communications, calendar and booking records, and other reasonable supporting evidence.', sub:1},
@@ -252,7 +258,7 @@ function vsaDefBlocks(P){
 function seatedDefBlocks(P){
   return [
     {h3:'3. Definition of a Seated Appointment'},
-    {p:'A "Seated Appointment" means a scheduled estimate appointment at which the prospect — a homeowner or authorised decision-maker located within the Customer’s agreed service area — attends and is present (in person or, where agreed, virtually) for the Customer to provide an estimate. No-shows, cancellations, and prospects that fail these criteria do not constitute Seated Appointments and are not billed.'},
+    {p:'A "Seated Appointment" means a scheduled estimate appointment at which the prospect — a homeowner or authorized decision-maker located within the Customer’s agreed service area — attends and is present (in person or, where agreed, virtually) for the Customer to provide an estimate. No-shows, cancellations, and prospects that fail these criteria do not constitute Seated Appointments and are not billed.'},
   ];
 }
 
@@ -352,7 +358,7 @@ function chargesBlocks(P){
   else if(P.type==='payg' && P.per>0) clauses.push('Per-Appointment Fee. The Per-Appointment Fee of '+money(P.per)+' USD is billed upon confirmation of each showed appointment delivered.');
   if(P.adSpend==='client') clauses.push('Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.');
   else if(P.adSpend==='agency') clauses.push('Advertising Spend. The Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend.');
-  clauses.push('Authorisation. The Customer authorises the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.');
+  clauses.push('Authorization. The Customer authorizes the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.');
   clauses.push('Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of services at the Supplier’s discretion'+(P.type==='program'?'. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.':'.'));
 
   var out = [{h:'Schedule 2 — Charges & Payment'},{h3:'1. Fee Structure'},{table:rows},{h3:'2. Payment Terms'}];
@@ -486,7 +492,7 @@ function buildSigners(){
   const n = P.signers;
   let html='';
   for(let i=1;i<=n;i++){
-    const lab = n===2 ? ('Customer — Partner '+i) : 'Authorised Signatory';
+    const lab = n===2 ? ('Customer — Partner '+i) : 'Authorized Signatory';
     html += '<div class="signer-card"><div class="st">'+lab+'</div>'
       + '<div class="grid2">'
       + '<div class="field"><label>Full Name</label><input id="name'+i+'" autocomplete="name"></div>'
@@ -619,9 +625,16 @@ function wireSubmit(){
         }) });
       await new Promise(r=>setTimeout(r,700));
       try{ localStorage.removeItem('rmb_deal'); }catch(e){}
-      // sign-first WITH payment → send to Whop checkout. agreement-only or pay-first → thank-you.
-      if (P.payment === 'whop' && P.flow === 'sign' && DEAL.whop) { window.location.href = DEAL.whop; }
-      else { window.location.href = SUCCESS_REDIRECT_URL; }
+      // sign-first WITH payment → send to checkout. agreement-only or pay-first → thank-you.
+      if (P.payment === 'whop' && P.flow === 'sign' && DEAL.whop) {
+        if ((DEAL.payStyle || 'direct') === 'branded') {
+          // branded: hand off to the /pay page (carries the token, returns to thank-you after payment)
+          var tok = new URLSearchParams(location.search).get('t') || encodeToken(DEAL);
+          window.location.href = PAY_URL + '?t=' + tok + '&signed=1';
+        } else {
+          window.location.href = DEAL.whop;   // direct: straight to the raw Whop link
+        }
+      } else { window.location.href = SUCCESS_REDIRECT_URL; }
     }catch(e){ btn.disabled=false; btn.textContent='Sign & Submit Agreement'; showErr('Submission failed: '+(e.message||'unknown')); }
   });
 }

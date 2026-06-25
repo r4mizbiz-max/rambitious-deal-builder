@@ -102,12 +102,12 @@
     <div class="checkout-col">
       <div class="cocard">
         <div class="cohead">
-          <span class="step">Step 1 of 2 · Pay, then sign</span>
+          <span class="step" id="coStep">Step 1 of 2 · Pay, then sign</span>
           <span class="sec">🔒 Whop secure checkout</span>
         </div>
         <div id="checkout"><div class="load"><div class="spin"></div>Loading secure checkout…</div></div>
       </div>
-      <div class="foot">After payment you'll be taken straight to your agreement to sign.</div>
+      <div class="foot" id="coFoot">After payment you'll be taken straight to your agreement to sign.</div>
     </div>
   </div>
 </div>
@@ -119,9 +119,17 @@
   var $ = function(id){ return document.getElementById(id); };
   var box = $('checkout');
 
-  var t = new URLSearchParams(location.search).get('t');
+  var params = new URLSearchParams(location.search);
+  var t = params.get('t');
+  var signed = params.get('signed') === '1';   // arriving here AFTER signing (branded post-sign style)
   var deal = t ? decode(t) : null;
   if(!deal){ box.innerHTML = '<div class="err">This link is invalid or expired — please contact us for a new one.</div>'; return; }
+
+  // post-sign: they've already signed → this is just the payment step
+  if(signed){
+    if($('coStep')) $('coStep').textContent = 'Secure checkout';
+    if($('coFoot')) $('coFoot').textContent = "You're all set — just complete your payment below to finish.";
+  }
 
   // backup so the agreement still adapts even if the return URL drops the token
   try{ localStorage.setItem('rmb_deal', JSON.stringify(deal)); }catch(e){}
@@ -163,9 +171,11 @@
   }).join('');
   if(pif){ $('totals').style.display='flex'; $('tvNum').textContent='$11,000+'; $('nowNum').textContent=fmt(deal.upfront); }
 
-  // mount the embedded checkout (DARK), return to the agreement WITH the token
+  // mount the embedded checkout (DARK). post-sign → return to thank-you; pay-first → return to /ament to sign
   var planId = (String(deal.whop||'').match(/(plan_[A-Za-z0-9]+)/) || [])[1];
-  var returnUrl = 'https://www.rambitiousmedia.com/ament?t=' + encodeURIComponent(t);
+  var returnUrl = signed
+    ? 'https://www.rambitiousmedia.com/urin'
+    : ('https://www.rambitiousmedia.com/ament?t=' + encodeURIComponent(t));
   if(!planId){
     if(deal.whop){ location.replace(deal.whop); return; }
     box.innerHTML = '<div class="err">This link is missing its checkout. Please contact us.</div>'; return;

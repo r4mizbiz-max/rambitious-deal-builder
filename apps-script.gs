@@ -115,22 +115,34 @@ function doPost(e) {
     var pdfBase64      = String(data.pdfBase64      || '').trim();
 
     // deal fields (token flow). Legacy posts omit these.
-    var dealType  = String(data.dealType  || 'legacy').trim();
-    var upfront   = String(data.upfront   || '997').trim();
-    var perAppt   = String(data.perAppt   || rate || '').trim();
-    var estimates = String(data.estimates || '').trim();
-    var minDaily  = String(data.minDaily  || '').trim();
-    var days      = String(data.days      || '').trim();
-    var phone     = String(data.phone     || '').trim();
-    var address   = String(data.address   || '').trim();
-    var signers   = String(data.signers   || '1').trim();
-    var isTrial   = (dealType === 'trial');
-    var isProgram = (!isTrial && estimates !== '' && estimates !== '0');
-    var progName  = isTrial ? 'Trial Service Agreement' : 'Service Agreement (Guaranteed Appointment Delivery Program)';
+    var dealType   = String(data.dealType  || 'legacy').trim();
+    var upfront    = String(data.upfront   || '997').trim();
+    var perAppt    = String(data.perAppt   || rate || '').trim();
+    var estimates  = String(data.estimates || '').trim();
+    var minDaily   = String(data.minDaily  || '').trim();
+    var days       = String(data.days      || '').trim();
+    var phone      = String(data.phone     || '').trim();
+    var address    = String(data.address   || '').trim();
+    var signers    = String(data.signers   || '1').trim();
+    var adSpend    = String(data.adSpend   || '').trim();   // client | agency | none (v2)
+    var payment    = String(data.payment   || '').trim();   // whop | none (v2)
+    var agType     = String(data.agreementType || '').trim();
+    var isTrial    = (dealType === 'trial');
+    var isProgram  = (dealType === 'program' || dealType === 'pif' || (!isTrial && estimates !== '' && estimates !== '0'));
+
+    // Program / document name shown in the customer email.
+    var progName;
+    if (agType) progName = agType + (dealType === 'program' ? ' (Guaranteed Appointment Delivery Program)' : '');
+    else if (isTrial) progName = 'Trial Service Agreement';
+    else if (isProgram) progName = 'Service Agreement (Guaranteed Appointment Delivery Program)';
+    else progName = 'Service Agreement';
 
     // Executed terms (rendered as a formal table in the emails).
-    var terms;
-    if (isTrial) {
+    // v2: the agreement page sends termsRows so the email matches the contract exactly.
+    var terms = null;
+    if (data.termsRows && Object.prototype.toString.call(data.termsRows) === '[object Array]' && data.termsRows.length) {
+      terms = data.termsRows.map(function (r) { return [String(r[0] || ''), String(r[1] || '')]; });
+    } else if (isTrial) {
       terms = [
         ['Trial Setup Fee', '$' + upfront + ' USD — one-time, paid in full on signing'],
         ['Per-Seated-Appointment Fee', '$' + perAppt + ' USD per Seated Appointment'],
@@ -200,7 +212,7 @@ function doPost(e) {
         'Executed:   ' + signedAtPretty + '\n\n' +
         'EXECUTED TERMS\n' + termsPlain + '\n\n' +
         'Fully-executed PDF: ' + fileUrl;
-    var htmlBody = buildAdminHtml(businessName, fullName, email, phone, address, terms, signedAtPretty, fileUrl);
+    var htmlBody = buildAdminHtml(businessName, fullName, email, phone, address, terms, signedAtPretty, fileUrl, progName);
 
     GmailApp.sendEmail(NOTIFY_EMAIL, subject, plainBody, {
       name: FROM_NAME, htmlBody: htmlBody, attachments: [pdfBlob], replyTo: email
@@ -260,8 +272,8 @@ function termsTable(terms) {
   return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + rows + '</table>';
 }
 
-function buildAdminHtml(businessName, fullName, email, phone, address, terms, signedAtPretty, fileUrl) {
-  var bn=esc(businessName), fn=esc(fullName), em=esc(email), ph=esc(phone||'—'), ad=esc(address||'—'), sa=esc(signedAtPretty), fu=esc(fileUrl);
+function buildAdminHtml(businessName, fullName, email, phone, address, terms, signedAtPretty, fileUrl, progName) {
+  var bn=esc(businessName), fn=esc(fullName), em=esc(email), ph=esc(phone||'—'), ad=esc(address||'—'), sa=esc(signedAtPretty), fu=esc(fileUrl), pg=esc(progName||'Service Agreement');
   return `
 <!DOCTYPE html><html><body style="margin:0;padding:0;background:#eef0f4;font-family:Georgia,'Times New Roman',serif;color:#1a1f2e;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f4;padding:30px 16px;"><tr><td align="center">
@@ -269,8 +281,8 @@ function buildAdminHtml(businessName, fullName, email, phone, address, terms, si
       ${letterhead()}
       <tr><td style="padding:26px 40px 8px;">
         <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#1f3a5f;font-weight:bold;">Counterpart Notice</div>
-        <div style="font-size:21px;font-weight:bold;color:#1f3a5f;margin:6px 0 14px;">Executed Service Agreement</div>
-        <div style="font-size:13.5px;color:#3b4252;line-height:1.6;margin-bottom:20px;">A counterpart of the Service Agreement (Guaranteed Appointment Delivery Program) has been executed by the Customer identified below. The fully-executed PDF is attached and stored in the Drive folder.</div>
+        <div style="font-size:21px;font-weight:bold;color:#1f3a5f;margin:6px 0 14px;">Executed ${pg}</div>
+        <div style="font-size:13.5px;color:#3b4252;line-height:1.6;margin-bottom:20px;">A counterpart of the ${pg} has been executed by the Customer identified below. The fully-executed PDF is attached and stored in the Drive folder.</div>
         <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#1f3a5f;font-weight:bold;margin-bottom:4px;">Customer</div>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:18px;">
           ${trow('Business Name','<strong>'+bn+'</strong>')}

@@ -1,51 +1,61 @@
-# Rambitious Deal Link Builder
+# Rambitious Agreement & Deal Builder
 
-One-click deal links. You pick **Pay-in-Full** or **Pay-as-you-go** + the prices, hit
-generate, and get a single link on your domain. It mints the Whop checkout and the
-agreement page **adapts itself** (contract text, PDF, and emails) from a token in the URL.
+One screen to draft any client agreement in seconds. Pick the structure, set **every**
+term, hit generate, and get a single link on your domain. The agreement page builds
+**itself** from a token in the URL — contract text, the signed PDF, and the emails to
+you + the signer all adapt to the deal you configured.
 
-## Flow (pay-first, token rides the URL)
-1. **You** open `generator.html`, choose PIF/PAYG, set the price(s), attach a Whop checkout
-   link (paste, or one-click auto-create once the Worker is live) → **Generate link** →
-   you get `rambitiousmedia.com/pay?t=<token>`.
-2. **Client** opens `/pay?t=…` → it **embeds the Whop checkout** for that price right on the
-   page → they **pay**.
-3. Whop returns them to **`/agreement-page?t=<same token>`** → the agreement **auto-adapts**
-   to the deal you declared → they sign → a PDF (signature + name + business + date burned in)
-   saves to your Drive + emails both of you.
+## What you control (in `generator.html`)
+- **Agreement type** — Program (guaranteed appointments) · Pay-as-you-go · Trial · Flat/Custom
+- **Ad spend funded by** — Client (min $/day) · Rambitious (we cover it) · N/A
+- **Output** — Agreement **+ Payment** (Whop checkout) · **Agreement only** (no payment)
+- **Flow** — Sign first (sign → pay) · Pay first (pay → sign). Locked to "sign" when agreement-only.
+- **Signers** — 1 or 2
+- All numbers (fee, per-appointment, appointments guaranteed, min daily spend, window)
+- Optional pre-fill of business + signer name
+- **Customize wording** — override the title/subtitle and add any number of **custom clauses**
+  (heading + body) that render in the contract, the PDF, and stay in sync with the emails.
 
-The token is in the URL the whole way (with a localStorage backup). No global Whop redirect
-setting needed — the embed bakes the return URL per-checkout.
+## Flow
+1. **You** open `generator.html`, configure the deal, (paste/auto-create the Whop link if it's a
+   paid deal) → **Generate link**.
+2. **Client** opens the link →
+   - *Agreement only / sign-first* → `rambitiousmedia.com/ament?t=<token>` → reviews + signs.
+   - *Pay-first* → `rambitiousmedia.com/pay?t=<token>` → pays via Whop → signs the adapted agreement.
+3. On signing, a fully-executed PDF (signature, name, business, date burned in) saves to your
+   Drive **and emails both you and the signer** the executed counterpart.
 
-GHL pages: paste `agreement.html` → `/agreement-page`, `pay.html` → `/pay`.
+No new infra — same GHL page + Google Apps Script + Whop you already run.
 
-## Files
-| File | Where it goes |
-|---|---|
-| `generator.html` | **Live as a GitHub Page** (password-gated). Bookmark it. Pure client-side — no server, no keys. |
-| `agreement.html` | Paste into the GHL custom-code page at **`/agreement`** (replaces the current one). Token-driven; legacy niche flow still works if no token. Uses your **existing** Apps Script for the Drive-save + emails — nothing new to set up. |
-| `apps-script.gs` | **Optional.** Your existing deployed script already saves the PDF + emails. This version just makes those notification emails show the new PIF/PAYG pricing instead of the old $997 text. Paste + redeploy (New version) only if you care about that. |
+## Files & where each one goes
+| File | Where it lives | How a change goes live |
+|---|---|---|
+| `generator.html` | **GitHub Pages** (your internal tool, password-gated) | push to `main` → live in ~60s |
+| `agreement.html` | pasted into the **GHL** custom-code page at **`/ament`** | edit here → **paste into GHL** |
+| `pay.html` | pasted into the **GHL** page at **`/pay`** | edit here → **paste into GHL** |
+| `apps-script.gs` | **Google Apps Script** project | paste → **Deploy → Manage deployments → Edit → New version** |
+| `worker.js` | optional Cloudflare Worker (Whop auto-mint) | `wrangler deploy`; set `WORKER_URL` in `generator.html` |
 
-## Setup — that's it
-1. Paste `agreement.html` into the GHL `/agreement` page.
-2. Open the generator GitHub Page (password gated), pick a deal, set the price, paste a Whop
-   checkout link for that price, hit **Generate**.
+> Pushing to GitHub only updates the **generator**. The signing page + emails live in GHL /
+> Apps Script — they need a paste. Update GHL **before** sending any link that uses a new type.
 
-No Apps Script changes required. (A static page can't safely auto-mint Whop checkouts — that
-would need a server — so you paste the Whop link; the generator remembers it per deal type.)
+## One-time Apps Script setup
+Project Settings (gear) → **Script Properties**:
+- `WHOP_API_KEY` = your `apik_…` key
+- `WHOP_PRODUCT_ID` = a Whop product to attach plans to (`prod_…`)
 
-## Password gate
-The generator is gated by a client-side SHA-256 check. It deters casual visitors but is **not**
-real security (the repo is public). Don't put anything truly sensitive in this repo.
+Then re-deploy (**New version**) so the dynamic emails + `createWhopPlan` go live.
 
-## The token
-`?t=` is base64url(JSON) of:
-`{type:'pif'|'payg', upfront, perAppt, estimates, niche, minDaily, days, whop}`.
-Not sensitive (it's just deal terms + the public checkout link) — no secret needed.
+## The token (`?t=`)
+base64url(JSON) of the deal spec:
+`{ v:2, type, adSpend, payment, flow, signers, upfront, perAppt, estimates, minDaily, days,
+   niche, business, contact, title, subtitle, whop, custom:[{h,p}…] }`
+Not sensitive — just deal terms + the public checkout link. **Legacy `pif`/`payg`/`trial` tokens
+still render** (they normalize: `pif → program`, trial defaults to agency-funded spend).
 
-## Deal variants
-- **PIF** — e.g. `$6,000` for `20` qualified estimates, client-funded ad spend (min `$150`/day),
-  delivered within `31` days. No per-appointment fee.
-- **PAYG** — `$X` upfront + `$Y` per showed appointment, client-funded ad spend.
-
-Both contracts include the client-funded **Media Spend** clause and the no-show credit.
+## Deal variants (examples)
+- **Program** — e.g. `$6,000` for `20` qualified estimates, client-funded ad spend (min `$150`/day),
+  delivered within `31` days. Pro-rata refund on shortfall.
+- **Pay-as-you-go** — `$X` upfront + `$Y` per showed appointment.
+- **Trial** — short evaluation; agency can cover ad spend; ends in a review (terminate or continue).
+- **Flat / Custom** — a simple flat-fee service agreement; lean on custom clauses for bespoke scope.

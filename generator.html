@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rambitious — Agreement & Deal Builder</title>
+<title>Jitter Growth — Agreement & Deal Builder</title>
+<link rel="icon" type="image/png" href="https://jittergrowth.com/assets/brand/favicon-64.png" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#0a0b10;--mut:#6b6b78;--line:#e6e6ec;--soft:#f6f6f8;--accent:#7B5BFF;--accent2:#F580B8;--good:#0ca37f;--warn:#c47f00}
+  :root{--ink:#0a0b10;--mut:#6b6b78;--line:#e6e6ec;--soft:#f6f6f8;--accent:#0a0a0a;--accent2:#5c5c5c;--good:#0ca37f;--warn:#c47f00}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',system-ui,sans-serif;background:#0a0b10;color:var(--ink);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
   .wrap{width:min(720px,100%);background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
-  .head{background:linear-gradient(135deg,#7B5BFF,#B57BFF 40%,#F580B8 75%,#FF9A6B);padding:30px 34px;color:#fff}
+  .head{background:linear-gradient(135deg,#0a0a0a,#2e2e2e 55%,#5c5c5c 100%);padding:30px 34px;color:#fff}
   .head .ey{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;font-weight:600}
   .head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
   .head p{font-size:13.5px;opacity:.9;margin-top:6px;line-height:1.5}
@@ -22,7 +23,7 @@
   .seg.c4{grid-template-columns:repeat(4,1fr)}
   @media(max-width:560px){.seg.c4{grid-template-columns:1fr 1fr}}
   .seg button{padding:13px 12px;border-radius:13px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;text-align:left;transition:.13s}
-  .seg button.on{border-color:var(--accent);background:#f7f4ff;box-shadow:0 0 0 1px var(--accent) inset}
+  .seg button.on{border-color:var(--accent);background:#f4f4f4;box-shadow:0 0 0 1px var(--accent) inset}
   .seg button b{display:block;font-size:14px;font-weight:700}
   .seg button span{display:block;font-size:11px;color:var(--mut);margin-top:2px;line-height:1.3}
   .toggles{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -35,7 +36,7 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
   .pre{padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--line);font-size:13.5px;color:#3b3f4a;line-height:1.65;margin-bottom:18px}
   .pre b{color:var(--ink)}
-  .btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#7B5BFF,#F580B8);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+  .btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#0a0a0a,#3d3d3d);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .out{margin-top:22px;display:none}
   .out.show{display:block}
@@ -55,21 +56,21 @@
   .advbody{padding:18px 16px 6px}
   .clause{border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:12px;background:#fff;position:relative}
   .clause .rm{position:absolute;top:10px;right:12px;font-size:11px;color:#c0392b;background:#fdecea;border:1px solid #f5c6c0;border-radius:7px;padding:3px 9px;cursor:pointer;font-weight:600}
-  .addbtn{width:100%;padding:11px;border:1.5px dashed var(--accent);background:#faf8ff;color:var(--accent);border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}
+  .addbtn{width:100%;padding:11px;border:1.5px dashed var(--accent);background:#f8f8f8;color:var(--accent);border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}
 </style>
 </head>
 <body>
 <div id="gate" style="position:fixed;inset:0;z-index:999;background:#0a0b10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;padding:20px">
-  <div style="font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;font-weight:600">Rambitious · internal</div>
+  <div style="font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;font-weight:600">Jitter Growth · internal</div>
   <input id="gatePw" type="password" placeholder="Password" autocomplete="off"
     style="padding:14px 16px;border-radius:12px;border:1.5px solid #2a2b35;background:#15161d;color:#fff;font-size:16px;width:min(280px,90vw);font-family:inherit;text-align:center">
-  <button id="gateBtn" style="padding:13px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,#7B5BFF,#F580B8);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">Enter</button>
+  <button id="gateBtn" style="padding:13px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,#3d3d3d,#6e6e6e);color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">Enter</button>
   <div id="gateErr" style="font-size:13px;color:#ff6b6b;min-height:16px"></div>
 </div>
 
 <div class="wrap">
   <div class="head">
-    <div class="ey">Rambitious Media · internal</div>
+    <div class="ey">Jitter Growth · internal</div>
     <h1>Agreement &amp; Deal Builder</h1>
     <p>Pick the structure, set every term, hit generate. You get one link on your domain — the agreement page builds itself from the link: contract text, signed PDF, and the emails to you + the signer.</p>
   </div>
@@ -92,7 +93,7 @@
         <div class="tgl">Ad spend funded by</div>
         <div class="seg" id="spendSeg" style="grid-template-columns:1fr 1fr 1fr">
           <button data-spend="client" class="on"><b>Client</b><span>min $/day</span></button>
-          <button data-spend="agency"><b>Rambitious</b><span>we cover it</span></button>
+          <button data-spend="agency"><b>Jitter Growth</b><span>we cover it</span></button>
           <button data-spend="none"><b>N/A</b><span>no ad spend</span></button>
         </div>
       </div>
@@ -318,7 +319,7 @@ function deal(){
 function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
 function spendPhrase(d){
   if (d.adSpend === 'client') return 'Client funds the ad spend (min $'+fmt(d.minDaily)+'/day).';
-  if (d.adSpend === 'agency') return 'Rambitious covers 100% of the ad spend.';
+  if (d.adSpend === 'agency') return 'Jitter Growth covers 100% of the ad spend.';
   return '';
 }
 function renderPreview(){
@@ -357,7 +358,7 @@ $('mintBtn').addEventListener('click', async () => {
   setStatus('Creating Whop checkout…', '');
   $('mintBtn').disabled = true;
   try {
-    const label = encodeURIComponent(TYPE.toUpperCase()+' '+($('niche').value || 'Rambitious')+' $'+price);
+    const label = encodeURIComponent(TYPE.toUpperCase()+' '+($('niche').value || 'Jitter Growth')+' $'+price);
     const r = await fetch(`${WORKER_URL}?price=${price}&label=${label}`);
     const resp = await r.json();
     if (resp.ok && resp.link) { $('whop').value = resp.link; localStorage.setItem(whopKey(), resp.link); setStatus('✓ ' + resp.plan_id, 'ok'); }

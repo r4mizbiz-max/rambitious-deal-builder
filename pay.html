@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Complete your enrollment — Rambitious Media</title>
+<title>Complete your enrollment — Jitter Growth</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/png" href="/assets/brand/favicon-64.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Whop embedded checkout loader -->
@@ -12,18 +14,18 @@
   :root{
     --bg:#08090d; --panel:#0f1118; --panel2:#13151e; --line:#22242e;
     --ink:#ffffff; --mut:#9aa0ad; --mut2:#6c717d;
-    --g1:#7B5BFF; --g2:#B57BFF; --g3:#F580B8; --g4:#FF9A6B; --good:#36d399;
+    --g1:#ffffff; --g2:#e6e6e6; --g3:#9a9a9a; --g4:#6e6e6e; --good:#36d399;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
   body{min-height:100vh;background:
-    radial-gradient(1100px 500px at 12% -10%, rgba(123,91,255,.18), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(245,128,184,.12), transparent 55%),
+    radial-gradient(1100px 500px at 12% -10%, rgba(255,255,255,.07), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(255,255,255,.05), transparent 55%),
     var(--bg);
     padding:42px 20px 64px}
   .shell{max-width:1080px;margin:0 auto}
   .brand{display:flex;align-items:center;gap:10px;margin-bottom:30px}
-  .brand .dot{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--g1),var(--g3));display:grid;place-items:center;font-weight:900;font-size:14px}
+  .brand .dot{width:26px;height:26px;border-radius:7px;background:#fff;color:#0a0a0a;display:grid;place-items:center;font-weight:900;font-size:14px}
   .brand b{font-size:14px;font-weight:700;letter-spacing:.02em}
   .brand .tag{margin-left:auto;font-size:11px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;font-weight:600}
 
@@ -34,13 +36,13 @@
   .ey{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--g2)}
   .ey::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--g3)}
   h1{font-size:clamp(30px,4.4vw,46px);font-weight:900;letter-spacing:-.03em;line-height:1.04;margin:14px 0 12px;
-     background:linear-gradient(120deg,#fff 30%,#d8c8ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+     background:linear-gradient(120deg,#fff 30%,#bdbdbd);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .lede{font-size:15.5px;color:var(--mut);line-height:1.6;max-width:46ch}
   .price{display:flex;align-items:baseline;gap:12px;margin:24px 0 6px}
   .price .big{font-size:clamp(40px,6vw,60px);font-weight:900;letter-spacing:-.03em}
   .price .unit{font-size:14px;color:var(--mut);font-weight:600;line-height:1.3}
   .pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 26px}
-  .pill{font-size:12px;font-weight:600;color:#e9e3ff;background:rgba(123,91,255,.12);border:1px solid rgba(123,91,255,.3);padding:6px 11px;border-radius:999px}
+  .pill{font-size:12px;font-weight:600;color:#efefef;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.24);padding:6px 11px;border-radius:999px}
   .pill.good{color:#bff3dc;background:rgba(54,211,153,.1);border-color:rgba(54,211,153,.3)}
 
   .stack{list-style:none;border-top:1px solid var(--line)}
@@ -53,7 +55,7 @@
   .totals .tv .n{font-size:22px;font-weight:800;text-decoration:line-through;color:var(--mut)}
   .totals .now{text-align:right}
   .totals .now .l{font-size:12px;color:var(--mut2)}
-  .totals .now .n{font-size:30px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(120deg,var(--g2),var(--g3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .totals .now .n{font-size:30px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(120deg,#fff,#bdbdbd);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 
   .why{margin-top:24px;padding:16px 18px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
   .why .t{font-size:13px;font-weight:700;margin-bottom:6px}
@@ -62,7 +64,7 @@
   /* ── CHECKOUT (right) ── */
   .cocard{position:sticky;top:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
   .cohead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-  .cohead .step{font-size:12px;font-weight:700;color:#cbb6ff;background:rgba(123,91,255,.14);border:1px solid rgba(123,91,255,.3);padding:5px 10px;border-radius:999px}
+  .cohead .step{font-size:12px;font-weight:700;color:#e6e6e6;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.26);padding:5px 10px;border-radius:999px}
   .cohead .sec{margin-left:auto;font-size:11.5px;color:var(--mut2);display:flex;align-items:center;gap:5px}
   #checkout{min-height:420px;background:var(--panel)}
   .load{display:flex;flex-direction:column;align-items:center;gap:12px;padding:60px 20px;color:var(--mut)}
@@ -75,7 +77,7 @@
 <body>
 <div class="shell">
   <div class="brand">
-    <div class="dot">R</div><b>Rambitious Media</b>
+    <div class="dot">J</div><b>Jitter Growth</b>
     <span class="tag">Secure enrollment</span>
   </div>
 
@@ -153,7 +155,7 @@
   // ad-spend messaging block adapts to who funds it
   if(!clientFunds){
     $('whyT').textContent = 'Why this is fully managed';
-    $('whyP').textContent = 'Rambitious covers and manages the ad spend — you don’t hand over ad accounts or budgets. You focus on the estimates we put in front of you; no-shows are credited, never counted.';
+    $('whyP').textContent = 'Jitter Growth covers and manages the ad spend — you don’t hand over ad accounts or budgets. You focus on the estimates we put in front of you; no-shows are credited, never counted.';
   }
 
   // value stack
@@ -174,8 +176,8 @@
   // mount the embedded checkout (DARK). post-sign → return to thank-you; pay-first → return to /ament to sign
   var planId = (String(deal.whop||'').match(/(plan_[A-Za-z0-9]+)/) || [])[1];
   var returnUrl = signed
-    ? 'https://www.rambitiousmedia.com/urin'
-    : ('https://www.rambitiousmedia.com/ament?t=' + encodeURIComponent(t));
+    ? 'https://jittergrowth.com/urin'
+    : ('https://jittergrowth.com/ament?t=' + encodeURIComponent(t));
   if(!planId){
     if(deal.whop){ location.replace(deal.whop); return; }
     box.innerHTML = '<div class="err">This link is missing its checkout. Please contact us.</div>'; return;

@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rambitious Media — Service Agreement</title>
+<title>Jitter Growth — Service Agreement</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/png" href="/assets/brand/favicon-64.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
@@ -64,13 +66,13 @@
 <div class="wrap" id="root">
   <div class="badtoken" id="bad" style="display:none">
     <h2 style="color:#1f3a5f">Agreement link invalid</h2>
-    <p style="margin-top:10px">This signing link is missing or expired. Please contact Rambitious Media for a new one.</p>
+    <p style="margin-top:10px">This signing link is missing or expired. Please contact Jitter Growth for a new one.</p>
   </div>
 
   <div id="app" style="display:none">
     <div class="paper">
       <div class="dochead">
-        <div class="k">Rambitious Media</div>
+        <div class="k">Jitter Growth</div>
         <h1 id="docTitle">Service Agreement</h1>
         <div class="sub" id="docSub">Guaranteed Appointment Delivery Program</div>
       </div>
@@ -91,7 +93,7 @@
 
         <label class="agree"><input type="checkbox" id="agree"><span>I have read, understood, and agree to be bound by the terms of this Service Agreement. The signature(s), name(s), and details entered above constitute a legally binding electronic signature.</span></label>
         <button class="submit" id="submit">Sign &amp; Submit Agreement</button>
-        <div class="foot-note">A fully-executed PDF copy will be emailed to you and saved by Rambitious Media.</div>
+        <div class="foot-note">A fully-executed PDF copy will be emailed to you and saved by Jitter Growth.</div>
       </div>
     </div>
   </div>
@@ -100,9 +102,9 @@
 <script>
 /* ───────── CONFIG ───────── */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMvap-Yonchi1i52zb4fUnD85yxAFMMf3UKOdzf6ccufcvX-h4Bhcg4va8xVG4XZoxCw/exec';
-const SUCCESS_REDIRECT_URL = 'https://www.rambitiousmedia.com/urin';
-const PAY_URL = 'https://www.rambitiousmedia.com/pay';   // branded checkout page (used for the "branded" post-sign style)
-const SUPPLIER = { legal:'RAMBITIOUS LLC', dba:'Rambitious Media', addr:'41690 Enterprise Cir N, Temecula, CA 92592, United States', signer:'Ramiz Qumseya', title:'Founder' };
+const SUCCESS_REDIRECT_URL = 'https://jittergrowth.com/urin';
+const PAY_URL = 'https://jittergrowth.com/pay';   // branded checkout page (used for the "branded" post-sign style)
+const SUPPLIER = { legal:'RAMBITIOUS LLC', dba:'Jitter Growth', addr:'41690 Enterprise Cir N, Temecula, CA 92592, United States', signer:'Ramiz Qumseya', title:'Founder' };
 
 /* ───────── token ───────── */
 function rawToken(){
@@ -397,7 +399,7 @@ function generalBlocks(P){
     {h3:'Independent Contractor'},
     {p:'The Supplier is engaged as an independent contractor. Nothing in this Agreement creates a partnership, joint venture, agency, franchise, or employment relationship between the Parties.'},
     {h3:'Use of Client Results'},
-    {p:'The Customer grants Rambitious Media the right to use performance results, case studies, and campaign outcomes for marketing, promotional, and educational purposes. Confidential information will be excluded unless separately consented to in writing. This permission survives termination of this Agreement.'},
+    {p:'The Customer grants the Supplier the right to use performance results, case studies, and campaign outcomes for marketing, promotional, and educational purposes. Confidential information will be excluded unless separately consented to in writing. This permission survives termination of this Agreement.'},
     {h3:'Confidentiality'},
     {p:'Each Party agrees to keep confidential any non-public information about the other Party’s business, customers, strategies, processes, pricing, systems, and operations, both during and after the term of this Agreement, except as necessary to perform the Services or as required by law.'},
     {h3:'Limitation of Liability'},
@@ -462,7 +464,7 @@ function termsRows(P){
     if(P.fee>0) rows.push(['Service Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
   }
   if(P.adSpend==='client')      rows.push(['Advertising Spend', money(P.day)+' USD per day — funded by Customer, invoiced weekly']);
-  else if(P.adSpend==='agency') rows.push(['Advertising Spend', 'Covered by Rambitious LLC (no cost to Customer)']);
+  else if(P.adSpend==='agency') rows.push(['Advertising Spend', 'Covered by the Supplier (no cost to Customer)']);
   if(P.type==='program')        rows.push(['Per-Appointment Valuation', money(P.per)+' USD (shortfall refund basis)']);
   if(!rows.length)              rows.push(['Fees', 'No fees payable under this Agreement']);
   return rows;
@@ -524,7 +526,7 @@ function buildPDF(C){
   const M=64, MAXW=PW-M*2; let y=M;
   const NAVY=[31,58,95];
   const TITLE = titleFor(P), SUBT = subFor(P);
-  function header(){ doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(150,150,150); doc.text('Rambitious Media — '+TITLE, PW-M, 40, {align:'right'}); }
+  function header(){ doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(150,150,150); doc.text('Jitter Growth — '+TITLE, PW-M, 40, {align:'right'}); }
   function need(h){ if(y+h>PH-60){ doc.addPage(); y=M; header(); } }
   function H2(t){ need(40); y+=10; doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(...NAVY); doc.text(t.toUpperCase(),M,y); y+=6; doc.setDrawColor(...NAVY); doc.setLineWidth(1.2); doc.line(M,y,PW-M,y); y+=14; }
   function H3(t){ need(26); y+=6; doc.setFont('times','bold'); doc.setFontSize(11); doc.setTextColor(20,20,20); doc.text(t,M,y); y+=14; }

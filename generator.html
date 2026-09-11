@@ -79,10 +79,11 @@
     <!-- AGREEMENT TYPE -->
     <div class="blk">
       <div class="tgl">Agreement type</div>
-      <div class="seg c4" id="typeSeg">
+      <div class="seg" id="typeSeg" style="grid-template-columns:repeat(auto-fit,minmax(118px,1fr))">
         <button data-type="program" class="on"><b>Program</b><span>Guaranteed appointments</span></button>
         <button data-type="payg"><b>Pay-as-you-go</b><span>Setup + per-appt</span></button>
         <button data-type="trial"><b>Trial</b><span>Short evaluation</span></button>
+        <button data-type="retainer"><b>Retainer</b><span>Recurring monthly</span></button>
         <button data-type="flat"><b>Flat / Custom</b><span>Simple service agreement</span></button>
       </div>
     </div>
@@ -103,6 +104,15 @@
           <button data-pay="whop" class="on"><b>+ Payment</b><span>Whop checkout</span></button>
           <button data-pay="none"><b>Agreement only</b><span>no payment</span></button>
         </div>
+      </div>
+    </div>
+
+    <!-- CLIENT AD-SPEND BILLING (client-funded only) -->
+    <div class="blk hide" id="adBillingBlk" style="margin-top:18px">
+      <div class="tgl">Client ad spend — how it's billed</div>
+      <div class="seg c2" id="adBillingSeg">
+        <button data-adbilling="weekly" class="on"><b>We invoice weekly</b><span>You collect &amp; run the spend</span></button>
+        <button data-adbilling="direct"><b>Card on file at Meta</b><span>Platform charges them directly</span></button>
       </div>
     </div>
 
@@ -147,6 +157,11 @@
     <div class="grid">
       <div class="f" id="daysWrap"><label id="lblDays">Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
       <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
+    </div>
+
+    <div class="grid hide" id="termRow">
+      <div class="f"><label>Minimum term (months)</label><input id="term" type="number" value="3" min="0" step="1"><div class="hint">0 = month-to-month</div></div>
+      <div class="f"></div>
     </div>
 
     <div class="grid">
@@ -214,8 +229,9 @@ document.getElementById('gatePw').addEventListener('keydown', e => { if (e.key =
 const PAY_URL       = 'https://jittergrowth.com/pay';    // pay-first redirector → Whop → /ament
 const AGREEMENT_URL = 'https://jittergrowth.com/ament';  // sign-first / agreement-only → sign
 
-let TYPE = 'program';   // program | payg | trial | flat
+let TYPE = 'program';   // program | payg | trial | retainer | flat
 let SPEND = 'client';   // client | agency | none
+let ADBILLING = 'weekly'; // weekly (we invoice) | direct (client card on Meta). only matters when SPEND=client
 let PAY = 'whop';       // whop | none
 let FLOW = 'sign';      // sign | pay
 let PAYSTYLE = 'branded'; // branded (→ /pay page) | direct (→ raw whop link). only matters for sign-first + whop
@@ -231,6 +247,7 @@ function wireSeg(segId, attr, set){
 }
 wireSeg('typeSeg','type', v => { TYPE = v; loadWhop(); });           // reload remembered link for the new type
 wireSeg('spendSeg','spend', v => SPEND = v);
+wireSeg('adBillingSeg','adbilling', v => ADBILLING = v);
 wireSeg('payModeSeg','pay', v => { PAY = v; if (PAY === 'whop') loadWhop(); });
 wireSeg('flowSeg','flow', v => FLOW = v);
 wireSeg('payStyleSeg','paystyle', v => PAYSTYLE = v);
@@ -241,21 +258,24 @@ function setSeg(segId, attr, val){
 }
 
 function syncFields(){
-  const isProgram = TYPE === 'program', isPayg = TYPE === 'payg', isTrial = TYPE === 'trial', isFlat = TYPE === 'flat';
+  const isProgram = TYPE === 'program', isPayg = TYPE === 'payg', isTrial = TYPE === 'trial', isFlat = TYPE === 'flat', isRetainer = TYPE === 'retainer';
 
   // upfront label
-  $('lblUpfront').textContent = isProgram ? 'Total price ($)' : isTrial ? 'Trial setup fee ($)' : isFlat ? 'Flat fee ($)' : 'Upfront / setup fee ($)';
+  $('lblUpfront').textContent = isProgram ? 'Total price ($)' : isTrial ? 'Trial setup fee ($)' : isFlat ? 'Flat fee ($)' : isRetainer ? 'Monthly retainer ($)' : 'Upfront / setup fee ($)';
   // per-appt only for payg + trial
   $('perApptWrap').classList.toggle('hide', !(isPayg || isTrial));
   $('lblPer').textContent = isTrial ? 'Per seated appt ($)' : 'Per appointment ($)';
   // estimates only for program
   $('estWrap').classList.toggle('hide', !isProgram);
-  // days: program (fulfillment) + trial (trial period)
-  $('daysWrap').classList.toggle('hide', !(isProgram || isTrial));
-  $('lblDays').textContent = isTrial ? 'Trial period (days)' : 'Fulfillment window (days)';
+  // days: program (fulfillment) + trial (trial period) + retainer (cancellation notice)
+  $('daysWrap').classList.toggle('hide', !(isProgram || isTrial || isRetainer));
+  $('lblDays').textContent = isTrial ? 'Trial period (days)' : isRetainer ? 'Cancellation notice (days)' : 'Fulfillment window (days)';
+  // minimum term (months) — retainer only
+  $('termRow').classList.toggle('hide', !isRetainer);
 
-  // min daily only when client funds spend
+  // min daily + billing method only when client funds spend
   $('minDailyWrap').classList.toggle('hide', SPEND !== 'client');
+  $('adBillingBlk').classList.toggle('hide', SPEND !== 'client');
 
   // payment / flow
   const noPay = PAY === 'none';
@@ -270,6 +290,8 @@ function syncFields(){
   $('payStyleBlk').classList.toggle('hide', !(PAY === 'whop' && FLOW === 'sign'));
 
   if (isProgram && $('upfront').value === '997') $('upfront').value = '6000';
+  if (isRetainer && $('upfront').value === '6000') $('upfront').value = '2500';   // program default → sane monthly
+  if (isRetainer && $('days').value === '31') $('days').value = '30';             // typical cancellation notice
   renderPreview();
 }
 
@@ -296,12 +318,13 @@ function customClauses(){
 function deal(){
   const d = {
     v: 2,
-    type: TYPE, adSpend: SPEND, payment: PAY, flow: FLOW, payStyle: PAYSTYLE, signers: SIGNERS,
+    type: TYPE, adSpend: SPEND, adBilling: ADBILLING, payment: PAY, flow: FLOW, payStyle: PAYSTYLE, signers: SIGNERS,
     upfront: Number($('upfront').value || 0),
     perAppt: Number($('perAppt').value || 0),
     estimates: Number($('estimates').value || 0),
     minDaily: Number($('minDaily').value || 0),
     days: Number($('days').value || 0),
+    term: Number($('term').value || 0),
     niche: $('niche').value.trim(),
     business: $('business').value.trim(),
     contact: $('contact').value.trim(),
@@ -312,13 +335,16 @@ function deal(){
   };
   if (!(d.type === 'payg' || d.type === 'trial')) d.perAppt = 0;
   if (d.type !== 'program') d.estimates = 0;
-  if (d.adSpend !== 'client') d.minDaily = 0;
+  if (d.type !== 'retainer') d.term = 0;
+  if (d.adSpend !== 'client') { d.minDaily = 0; d.adBilling = ''; }
   return d;
 }
 
 function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
 function spendPhrase(d){
-  if (d.adSpend === 'client') return 'Client funds the ad spend (min $'+fmt(d.minDaily)+'/day).';
+  if (d.adSpend === 'client') return d.adBilling === 'direct'
+    ? 'Client’s card on file at Meta — billed directly (min $'+fmt(d.minDaily)+'/day).'
+    : 'Client funds the ad spend (min $'+fmt(d.minDaily)+'/day, we invoice weekly).';
   if (d.adSpend === 'agency') return 'Jitter Growth covers 100% of the ad spend.';
   return '';
 }
@@ -328,13 +354,14 @@ function renderPreview(){
   if (d.type === 'program')      core = '<b>Program.</b> $'+fmt(d.upfront)+' for <b>'+d.estimates+'</b> qualified estimates. Fulfilled within <b>'+d.days+'</b> days.';
   else if (d.type === 'payg')    core = '<b>Pay-as-you-go.</b> $'+fmt(d.upfront)+' upfront + <b>$'+fmt(d.perAppt)+'</b> per showed appointment.';
   else if (d.type === 'trial')   core = '<b>Trial.</b> $'+fmt(d.upfront)+' setup + <b>$'+fmt(d.perAppt)+'</b> per seated appt, over <b>'+d.days+'</b> days.';
+  else if (d.type === 'retainer') core = '<b>Retainer.</b> <b>$'+fmt(d.upfront)+'</b>/month' + (d.term>0 ? ', '+d.term+'-month minimum' : ', month-to-month') + (d.days>0 ? '. '+d.days+'-day cancellation notice.' : '.');
   else                           core = '<b>Flat / Custom.</b> $'+fmt(d.upfront)+' flat fee.';
   const sp = spendPhrase(d);
   const out = d.payment === 'none' ? 'Agreement only — no payment step.' : (d.flow === 'sign' ? 'Sign → then pay (Whop).' : 'Pay (Whop) → then sign.');
   const cc = d.custom.length ? ' <b>+'+d.custom.length+'</b> custom clause'+(d.custom.length>1?'s':'')+'.' : '';
   $('preview').innerHTML = core + (sp ? ' '+sp : '') + ' <span style="color:#6b6b78">'+out+'</span>' + cc;
 }
-['upfront','perAppt','estimates','minDaily','days','niche','business','contact','title','subtitle'].forEach(id => $(id).addEventListener('input', renderPreview));
+['upfront','perAppt','estimates','minDaily','days','term','niche','business','contact','title','subtitle'].forEach(id => $(id).addEventListener('input', renderPreview));
 
 /* base64url-encode the token (matches agreement's decodeToken) */
 function encodeToken(obj){

@@ -158,7 +158,7 @@ function params(d){
   const day = Number(d.minDaily)||0;
   return {
     N, fee, per, day, week:day*7, period:Number(d.days)||0, term:Number(d.term)||0,
-    signers:d.signers, type:d.type, adSpend:d.adSpend, payment:d.payment, flow:d.flow,
+    signers:d.signers, type:d.type, adSpend:d.adSpend, adBilling:String(d.adBilling||'weekly'), payment:d.payment, flow:d.flow,
     niche:String(d.niche||'').trim(), custom:d.custom,
     title:String(d.title||'').trim(), subtitle:String(d.subtitle||'').trim()
   };
@@ -188,7 +188,9 @@ function subFor(P){
    the PDF, and the emails all stay in lockstep. */
 
 function adSpendServiceLi(P){
-  if(P.adSpend==='client') return [{li:'Management of the Customer’s advertising spend on the Customer’s behalf, funded by the Customer as set out in Schedule 2.'}];
+  if(P.adSpend==='client') return [{li: P.adBilling==='direct'
+    ? 'Management and optimization of the Customer’s advertising campaigns on platforms on which the Customer maintains its own billing method, as set out in Schedule 2.'
+    : 'Management of the Customer’s advertising spend on the Customer’s behalf, funded by the Customer as set out in Schedule 2.'}];
   if(P.adSpend==='agency') return [{li:'Funding and management of all advertising spend at the Supplier’s own cost, as set out in Schedule 2.'}];
   return [];
 }
@@ -343,7 +345,9 @@ function custRespBlocks(P){
 
 /* ad-spend row + payment clause used in Schedule 2 */
 function adSpendRow(P){
-  if(P.adSpend==='client') return ['Advertising Spend (funded by the Customer)', money(P.day)+' USD per day, invoiced weekly at '+money(P.week)+' per 7-day period'];
+  if(P.adSpend==='client') return P.adBilling==='direct'
+    ? ['Advertising Spend (billed directly by the platform)', money(P.day)+' USD per day minimum — charged to the Customer’s payment method on file with the advertising platform (e.g. Meta)']
+    : ['Advertising Spend (funded by the Customer)', money(P.day)+' USD per day, invoiced weekly at '+money(P.week)+' per 7-day period'];
   if(P.adSpend==='agency') return ['Advertising Spend', 'Covered by the Supplier at its own cost (no cost to the Customer)'];
   return null;
 }
@@ -353,7 +357,9 @@ function chargesBlocks(P){
   if(!hasFee()){
     var out=[{h:'Schedule 2 — Charges & Payment'},{p:'No fees are payable by the Customer under this Agreement.'}];
     var r=adSpendRow(P);
-    if(P.adSpend==='client' && r){ out.push({p:'Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. Advertising spend is paid to third-party advertising platforms and is non-refundable.'}); }
+    if(P.adSpend==='client' && r){ out.push({p: P.adBilling==='direct'
+      ? 'The Customer maintains its own valid payment method on file directly with the advertising platform(s) (including, without limitation, Meta), and advertising spend is charged directly to the Customer by the platform. The Supplier does not collect, hold, invoice, or receive advertising spend. The Customer shall maintain a valid payment method and sufficient limits to sustain a minimum of '+money(P.day)+' USD per day in advertising spend. Advertising spend is non-refundable and is a matter between the Customer and the platform.'
+      : 'Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. Advertising spend is paid to third-party advertising platforms and is non-refundable.'}); }
     if(P.adSpend==='agency'){ out.push({p:'The Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend.'}); }
     return out;
   }
@@ -397,7 +403,9 @@ function chargesBlocks(P){
   if(feeBody) clauses.push(feeBody);
   if(P.type==='trial' && P.per>0) clauses.push('The Per-Seated-Appointment Fee of '+money(P.per)+' USD is billed automatically upon confirmation of each Seated Appointment delivered during the Trial.');
   else if(P.type==='payg' && P.per>0) clauses.push('Per-Appointment Fee. The Per-Appointment Fee of '+money(P.per)+' USD is billed upon confirmation of each showed appointment delivered.');
-  if(P.adSpend==='client') clauses.push('Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.');
+  if(P.adSpend==='client') clauses.push(P.adBilling==='direct'
+    ? 'Advertising Spend. The Customer maintains its own valid payment method on file directly with the advertising platform(s) (including, without limitation, Meta). All advertising spend is billed and charged directly to the Customer by the platform; the Supplier does not collect, hold, invoice, or receive advertising spend. The Customer shall maintain a valid payment method and sufficient limits to sustain a minimum of '+money(P.day)+' USD per day in advertising spend, and shall keep that method active for the duration of the engagement. Advertising spend is non-refundable and is a matter between the Customer and the platform.'
+    : 'Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.');
   else if(P.adSpend==='agency') clauses.push('Advertising Spend. The Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend.');
   clauses.push('Authorization. The Customer authorizes the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.');
   clauses.push('Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of services at the Supplier’s discretion'+(P.type==='program'?'. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.':'.'));
@@ -526,7 +534,9 @@ function termsRows(P){
   } else {
     if(P.fee>0) rows.push(['Service Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
   }
-  if(P.adSpend==='client')      rows.push(['Advertising Spend', money(P.day)+' USD per day — funded by Customer, invoiced weekly']);
+  if(P.adSpend==='client')      rows.push(['Advertising Spend', P.adBilling==='direct'
+                                  ? money(P.day)+' USD/day min — Customer’s card on file, billed directly by the platform'
+                                  : money(P.day)+' USD per day — funded by Customer, invoiced weekly']);
   else if(P.adSpend==='agency') rows.push(['Advertising Spend', 'Covered by the Supplier (no cost to Customer)']);
   if(P.type==='program')        rows.push(['Per-Appointment Valuation', money(P.per)+' USD (shortfall refund basis)']);
   if(!rows.length)              rows.push(['Fees', 'No fees payable under this Agreement']);
@@ -690,7 +700,7 @@ function wireSubmit(){
           businessName:C.business, fullName:C.names.join(' & '), email:C.email,
           niche:(DEAL.niche||''), rate:P.per,
           dealType:P.type, agreementType:titleFor(P), agreementSubtitle:subFor(P),
-          adSpend:P.adSpend, payment:P.payment, flow:P.flow,
+          adSpend:P.adSpend, adBilling:P.adBilling, payment:P.payment, flow:P.flow,
           upfront:P.fee, perAppt:P.per, estimates:P.N, minDaily:P.day, days:P.period, signers:P.signers,
           phone:C.phone, address:C.address,
           termsRows: termsRows(P),

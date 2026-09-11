@@ -149,7 +149,7 @@
   $('priceBig').textContent = fmt(deal.upfront);
   $('priceUnit').innerHTML = retainer ? 'per month' : pif ? ('one-time<br>' + deal.estimates + ' estimates') : 'upfront<br>+ per-appointment';
 
-  var adPill = clientFunds ? 'You own the ad account' : 'We cover the ad spend';
+  var adPill = !clientFunds ? 'We cover the ad spend' : (deal.adBilling === 'direct' ? 'Your card on file at Meta' : 'Ad spend invoiced weekly');
   var pills = retainer
     ? ['Fully managed, monthly', adPill, (deal.term>0 ? deal.term+'-month minimum' : 'Month-to-month'), 'Cancel with '+(deal.days||30)+'-day notice']
     : pif

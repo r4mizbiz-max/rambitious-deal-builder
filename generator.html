@@ -107,6 +107,15 @@
       </div>
     </div>
 
+    <!-- CLIENT AD-SPEND BILLING (client-funded only) -->
+    <div class="blk hide" id="adBillingBlk" style="margin-top:18px">
+      <div class="tgl">Client ad spend — how it's billed</div>
+      <div class="seg c2" id="adBillingSeg">
+        <button data-adbilling="weekly" class="on"><b>We invoice weekly</b><span>You collect &amp; run the spend</span></button>
+        <button data-adbilling="direct"><b>Card on file at Meta</b><span>Platform charges them directly</span></button>
+      </div>
+    </div>
+
     <!-- TOGGLES: flow + signers -->
     <div class="toggles" style="margin-top:18px">
       <div class="blk" style="margin-bottom:0">
@@ -222,6 +231,7 @@ const AGREEMENT_URL = 'https://jittergrowth.com/ament';  // sign-first / agreeme
 
 let TYPE = 'program';   // program | payg | trial | retainer | flat
 let SPEND = 'client';   // client | agency | none
+let ADBILLING = 'weekly'; // weekly (we invoice) | direct (client card on Meta). only matters when SPEND=client
 let PAY = 'whop';       // whop | none
 let FLOW = 'sign';      // sign | pay
 let PAYSTYLE = 'branded'; // branded (→ /pay page) | direct (→ raw whop link). only matters for sign-first + whop
@@ -237,6 +247,7 @@ function wireSeg(segId, attr, set){
 }
 wireSeg('typeSeg','type', v => { TYPE = v; loadWhop(); });           // reload remembered link for the new type
 wireSeg('spendSeg','spend', v => SPEND = v);
+wireSeg('adBillingSeg','adbilling', v => ADBILLING = v);
 wireSeg('payModeSeg','pay', v => { PAY = v; if (PAY === 'whop') loadWhop(); });
 wireSeg('flowSeg','flow', v => FLOW = v);
 wireSeg('payStyleSeg','paystyle', v => PAYSTYLE = v);
@@ -262,8 +273,9 @@ function syncFields(){
   // minimum term (months) — retainer only
   $('termRow').classList.toggle('hide', !isRetainer);
 
-  // min daily only when client funds spend
+  // min daily + billing method only when client funds spend
   $('minDailyWrap').classList.toggle('hide', SPEND !== 'client');
+  $('adBillingBlk').classList.toggle('hide', SPEND !== 'client');
 
   // payment / flow
   const noPay = PAY === 'none';
@@ -306,7 +318,7 @@ function customClauses(){
 function deal(){
   const d = {
     v: 2,
-    type: TYPE, adSpend: SPEND, payment: PAY, flow: FLOW, payStyle: PAYSTYLE, signers: SIGNERS,
+    type: TYPE, adSpend: SPEND, adBilling: ADBILLING, payment: PAY, flow: FLOW, payStyle: PAYSTYLE, signers: SIGNERS,
     upfront: Number($('upfront').value || 0),
     perAppt: Number($('perAppt').value || 0),
     estimates: Number($('estimates').value || 0),
@@ -324,13 +336,15 @@ function deal(){
   if (!(d.type === 'payg' || d.type === 'trial')) d.perAppt = 0;
   if (d.type !== 'program') d.estimates = 0;
   if (d.type !== 'retainer') d.term = 0;
-  if (d.adSpend !== 'client') d.minDaily = 0;
+  if (d.adSpend !== 'client') { d.minDaily = 0; d.adBilling = ''; }
   return d;
 }
 
 function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
 function spendPhrase(d){
-  if (d.adSpend === 'client') return 'Client funds the ad spend (min $'+fmt(d.minDaily)+'/day).';
+  if (d.adSpend === 'client') return d.adBilling === 'direct'
+    ? 'Client’s card on file at Meta — billed directly (min $'+fmt(d.minDaily)+'/day).'
+    : 'Client funds the ad spend (min $'+fmt(d.minDaily)+'/day, we invoice weekly).';
   if (d.adSpend === 'agency') return 'Jitter Growth covers 100% of the ad spend.';
   return '';
 }

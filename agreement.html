@@ -147,7 +147,7 @@ function normalize(raw){
 const DEAL = normalize(rawToken());
 function money(n){ return '$'+Number(n||0).toLocaleString('en-US'); }
 function todayStr(){ return new Date().toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'}); }
-const WORDS = { 1:'one (1)',2:'two (2)',3:'three (3)',5:'five (5)',7:'seven (7)',10:'ten (10)',14:'fourteen (14)',15:'fifteen (15)',20:'twenty (20)',21:'twenty-one (21)',30:'thirty (30)',31:'thirty-one (31)',45:'forty-five (45)',60:'sixty (60)',90:'ninety (90)' };
+const WORDS = { 1:'one (1)',2:'two (2)',3:'three (3)',4:'four (4)',5:'five (5)',6:'six (6)',7:'seven (7)',10:'ten (10)',12:'twelve (12)',14:'fourteen (14)',15:'fifteen (15)',20:'twenty (20)',21:'twenty-one (21)',24:'twenty-four (24)',30:'thirty (30)',31:'thirty-one (31)',45:'forty-five (45)',60:'sixty (60)',90:'ninety (90)' };
 function word(n){ return WORDS[n] || (n+' ('+n+')'); }
 
 /* derive the contract parameters from the deal */
@@ -157,7 +157,7 @@ function params(d){
   const per = Number(d.perAppt)>0 ? Number(d.perAppt) : (N ? Math.round(fee/Math.max(N,1)) : fee);
   const day = Number(d.minDaily)||0;
   return {
-    N, fee, per, day, week:day*7, period:Number(d.days)||0,
+    N, fee, per, day, week:day*7, period:Number(d.days)||0, term:Number(d.term)||0,
     signers:d.signers, type:d.type, adSpend:d.adSpend, payment:d.payment, flow:d.flow,
     niche:String(d.niche||'').trim(), custom:d.custom,
     title:String(d.title||'').trim(), subtitle:String(d.subtitle||'').trim()
@@ -169,13 +169,16 @@ const hasFee = () => (P.fee > 0 || P.per > 0);
 /* default title / subtitle per type (overridable via token) */
 function titleFor(P){
   if(P.title) return P.title;
-  return (P.type==='trial') ? 'Trial Service Agreement' : 'Service Agreement';
+  if(P.type==='trial')    return 'Trial Service Agreement';
+  if(P.type==='retainer') return 'Retainer Agreement';
+  return 'Service Agreement';
 }
 function subFor(P){
   if(P.subtitle) return P.subtitle;
-  if(P.type==='program') return 'Guaranteed Appointment Delivery Program';
-  if(P.type==='payg')    return 'Pay-As-You-Go Appointment Program';
-  if(P.type==='trial')   return (P.period? P.period+'-Day ':'')+'Trial Engagement';
+  if(P.type==='program')  return 'Guaranteed Appointment Delivery Program';
+  if(P.type==='payg')     return 'Pay-As-You-Go Appointment Program';
+  if(P.type==='trial')    return (P.period? P.period+'-Day ':'')+'Trial Engagement';
+  if(P.type==='retainer') return 'Monthly Retainer Engagement';
   return 'Professional Services';
 }
 
@@ -202,6 +205,12 @@ function bgBlocks(P){
     {p:'A. The Supplier provides marketing, advertising, lead generation, and related growth services for contractors operating in the home-improvement and renovation sector.'},
     {p:'B. The Customer wishes to engage the Supplier to provide the services described in this Agreement, and the Supplier agrees to be so engaged on the terms set out herein.'},
   ];
+  if(P.type==='retainer') return [
+    {h:'Background'},
+    {p:'A. The Supplier provides ongoing marketing, advertising, lead generation, and related growth services for contractors operating in the home-improvement and renovation sector.'},
+    {p:'B. The Customer wishes to engage the Supplier on an ongoing monthly retainer basis, and the Supplier agrees to be so engaged on the terms set out herein.'},
+    {p:'C. This Agreement governs the retainer engagement and continues on a recurring monthly basis until cancelled in accordance with Schedule 3.'},
+  ];
   // program / payg
   return [
     {h:'Background'},
@@ -225,6 +234,18 @@ function servicesBlocks(P){
     ].concat(adSpendServiceLi(P)).concat([
       {li:'Periodic progress updates via email, telephone, and/or reporting dashboard.'},
       {p:'Any additional scope, deliverables, or special terms agreed between the Parties are set out in the General Terms below.'},
+    ]);
+  }
+  if(P.type==='retainer'){
+    return [
+      {h:'Schedule 1 — Scope of Services'},
+      {h3:'1. Services Provided'},
+      {p:'For the duration of the retainer engagement, the Supplier shall provide the following services (the "Services"):'},
+      {li:'Design, build, deployment, and ongoing management of marketing and lead generation activity on the Customer’s behalf.'},
+      {li:'Creation, testing, and management of advertising creative, audience targeting, and campaign optimization across advertising platforms (including, without limitation, Meta platforms).'},
+    ].concat(adSpendServiceLi(P)).concat([
+      {li:'Ongoing campaign optimization, monitoring, reporting, and periodic progress updates via email, telephone, and/or reporting dashboard.'},
+      {p:'The specific deliverables, cadence, and any additional scope for the retainer are as agreed between the Parties and, where applicable, set out in the General Terms below.'},
     ]);
   }
   if(P.type==='trial'){
@@ -305,7 +326,7 @@ function noSalesBlock(){
 }
 
 function custRespBlocks(P){
-  if(P.type==='trial' || P.type==='flat') return [
+  if(P.type==='trial' || P.type==='flat' || P.type==='retainer') return [
     {h3:'Customer Responsibilities'},
     {p:'The Customer shall maintain a reachable phone number and email address, attend or be available for scheduled appointments, report appointment outcomes within forty-eight (48) hours, and not interfere with the advertising campaigns, creative, ad accounts, or platform assets managed by the Supplier.'},
   ];
@@ -356,6 +377,11 @@ function chargesBlocks(P){
       feeBody = 'Upfront Fee. The upfront fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date and is non-refundable.';
     }
     if(P.per>0) rows.push(['Per-Appointment Fee', money(P.per)+' USD per showed appointment']);
+  } else if(P.type==='retainer'){
+    if(P.fee>0){
+      rows.push(['Monthly Retainer Fee', money(P.fee)+' USD per month, billed monthly in advance']);
+      feeBody = 'Monthly Retainer Fee. The monthly retainer fee of '+money(P.fee)+' USD is due in full upon signing this Agreement for the first month, and monthly thereafter in advance on each subsequent monthly renewal date. Each monthly retainer fee is non-refundable once the monthly period to which it relates has commenced.';
+    }
   } else { // flat
     if(P.fee>0){
       rows.push(['Service Fee', money(P.fee)+' USD — one-time, payable in full on signing']);
@@ -387,6 +413,20 @@ function chargesBlocks(P){
   return out;
 }
 
+function retainerTermBlocks(P){
+  var notice = word(P.period>0 ? P.period : 30);
+  var out = [ {h:'Schedule 3 — Term, Renewal & Cancellation'} ];
+  if(P.term>0){
+    out.push({p:'The initial term of this Agreement is a minimum of '+word(P.term)+' months commencing on the Effective Date (the "Initial Term"). During the Initial Term neither Party may cancel except for the other Party’s material breach of this Agreement.'});
+    out.push({p:'Following the Initial Term, this Agreement continues on a month-to-month basis and automatically renews for successive one-month periods until cancelled in accordance with this Schedule.'});
+  } else {
+    out.push({p:'This Agreement operates on a month-to-month basis commencing on the Effective Date and automatically renews for successive one-month periods until cancelled in accordance with this Schedule.'});
+  }
+  out.push({p:'Either Party may cancel this Agreement by providing at least '+notice+' calendar days’ written notice to the other Party. Cancellation takes effect at the end of the then-current paid monthly period following expiry of the notice period. Monthly retainer fees for any monthly period that has already commenced are non-refundable, and the Supplier shall continue to provide the Services through the end of each period for which payment has been made.'});
+  out.push({p:'Late, declined, or failed payment of a monthly retainer fee may result in the immediate pause or suspension of the Services at the Supplier’s discretion until payment is brought current.'});
+  return out;
+}
+
 function trialReviewBlocks(P){
   const D = word(P.period);
   return [
@@ -403,6 +443,7 @@ function generalBlocks(P){
   var termP;
   if(P.type==='program') termP = 'This Agreement commences on the Effective Date and continues until the guaranteed '+word(P.N)+' Verified Seated Appointments have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. Except for the pro-rata refund expressly provided in Schedule 1, Section 4, all fees paid are non-refundable'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
   else if(P.type==='trial') termP = 'This Agreement commences on the Effective Date and governs the Trial only. Any continuation beyond the Trial Period requires a new written agreement signed by both Parties. All fees paid for services rendered during the Trial are non-refundable.';
+  else if(P.type==='retainer') termP = 'This Agreement commences on the Effective Date and continues on the recurring monthly retainer basis set out in Schedule 3 until cancelled by either Party in accordance with that Schedule. Monthly retainer fees are non-refundable once the monthly period to which they relate has commenced'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
   else termP = 'This Agreement commences on the Effective Date and continues until all Services have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. All fees paid are non-refundable'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
 
   var out = [
@@ -450,6 +491,11 @@ function docBlocks(P){
     b = b.concat(trialReviewBlocks(P));
     b = b.concat(noSalesBlock());
     b = b.concat(custRespBlocks(P));
+  } else if(P.type==='retainer'){
+    b = b.concat(chargesBlocks(P));
+    b = b.concat(retainerTermBlocks(P));
+    b = b.concat(noSalesBlock());
+    b = b.concat(custRespBlocks(P));
   } else { // flat
     b = b.concat(chargesBlocks(P));
     b = b.concat(noSalesBlock());
@@ -473,6 +519,10 @@ function termsRows(P){
   } else if(P.type==='payg'){
     if(P.fee>0) rows.push(['Upfront / Setup Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
     rows.push(['Per-Appointment Fee', money(P.per)+' USD per showed appointment']);
+  } else if(P.type==='retainer'){
+    if(P.fee>0) rows.push(['Monthly Retainer', money(P.fee)+' USD per month, billed monthly in advance']);
+    rows.push(['Minimum Term', P.term>0 ? (P.term+' month'+(P.term>1?'s':'')) : 'Month-to-month']);
+    rows.push(['Cancellation Notice', (P.period>0?P.period:30)+' days written notice']);
   } else {
     if(P.fee>0) rows.push(['Service Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
   }

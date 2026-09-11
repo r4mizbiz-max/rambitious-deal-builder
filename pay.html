@@ -137,19 +137,24 @@
   try{ localStorage.setItem('rmb_deal', JSON.stringify(deal)); }catch(e){}
 
   var pif = (deal.type === 'pif' || deal.type === 'program');   // program layout (legacy alias 'pif')
+  var retainer = deal.type === 'retainer';
   var clientFunds = (deal.adSpend == null) ? true : (deal.adSpend === 'client');   // legacy tokens = client-funded
   // headline / price / pills
-  $('headline').textContent = pif ? (deal.estimates + ' Qualified In-Home Estimates') : 'Your Growth Partnership';
-  $('lede').textContent = pif
-    ? ('We build and run the entire acquisition system and deliver ' + deal.estimates + ' real homeowners sitting with your estimator — within ' + deal.days + ' days.')
-    : ('We build and run the entire acquisition system and bill you only when a qualified homeowner actually sits down with you.');
+  $('headline').textContent = retainer ? 'Your Monthly Growth Retainer' : pif ? (deal.estimates + ' Qualified In-Home Estimates') : 'Your Growth Partnership';
+  $('lede').textContent = retainer
+    ? 'We build, run, and optimize your entire acquisition system every month — creative, funnels, setting, and daily campaign management, fully handled.'
+    : pif
+      ? ('We build and run the entire acquisition system and deliver ' + deal.estimates + ' real homeowners sitting with your estimator — within ' + deal.days + ' days.')
+      : ('We build and run the entire acquisition system and bill you only when a qualified homeowner actually sits down with you.');
   $('priceBig').textContent = fmt(deal.upfront);
-  $('priceUnit').innerHTML = pif ? ('one-time<br>' + deal.estimates + ' estimates') : 'upfront<br>+ per-appointment';
+  $('priceUnit').innerHTML = retainer ? 'per month' : pif ? ('one-time<br>' + deal.estimates + ' estimates') : 'upfront<br>+ per-appointment';
 
   var adPill = clientFunds ? 'You own the ad account' : 'We cover the ad spend';
-  var pills = pif
-    ? [Number(deal.estimates) + ' seated estimates', 'No-show? Credited', adPill, 'Delivered in ' + deal.days + ' days']
-    : [fmt(deal.perAppt) + ' per showed appt', 'No-show? Credited', adPill, 'Cancel anytime'];
+  var pills = retainer
+    ? ['Fully managed, monthly', adPill, (deal.term>0 ? deal.term+'-month minimum' : 'Month-to-month'), 'Cancel with '+(deal.days||30)+'-day notice']
+    : pif
+      ? [Number(deal.estimates) + ' seated estimates', 'No-show? Credited', adPill, 'Delivered in ' + deal.days + ' days']
+      : [fmt(deal.perAppt) + ' per showed appt', 'No-show? Credited', adPill, 'Cancel anytime'];
   $('pills').innerHTML = pills.map(function(p,i){ return '<span class="pill'+(i===1?' good':'')+'">'+p+'</span>'; }).join('');
 
   // ad-spend messaging block adapts to who funds it
@@ -166,7 +171,7 @@
     ['CRM, routing, reminders & no-show automations', '$1,500'],
     ['Daily campaign management & optimization', '$2,000'],
     ['No-show credit protection', 'included'],
-    [pif ? (deal.estimates + ' qualified seated estimates — guaranteed') : ('Pay only when they show — ' + fmt(deal.perAppt) + '/appt'), 'the deliverable', true],
+    [retainer ? 'Full-service growth management — every month' : pif ? (deal.estimates + ' qualified seated estimates — guaranteed') : ('Pay only when they show — ' + fmt(deal.perAppt) + '/appt'), 'the deliverable', true],
   ];
   $('stack').innerHTML = items.map(function(it){
     return '<li'+(it[2]?' class="head"':'')+'><span class="ck">✓</span><span>'+it[0]+'</span><span class="v">'+it[1]+'</span></li>';

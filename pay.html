@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Whop embedded checkout loader -->
-<script async defer src="https://js.whop.com/static/checkout/loader.js"></script>
+<script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements></script>
 <style>
   :root{
     --bg:#08090d; --panel:#0f1118; --panel2:#13151e; --line:#22242e;
@@ -181,25 +181,40 @@
   }).join('');
   if(pif){ $('totals').style.display='flex'; $('tvNum').textContent='$11,000+'; $('nowNum').textContent=fmt(deal.upfront); }
 
-  // Whop's EMBEDDED checkout is unreliable for some plans (renders "no longer available"),
-  // but the hosted checkout link works — so send the client there with a branded CTA.
-  // deal is already stashed to localStorage above, so after payment the agreement page
-  // (/ament) re-hydrates the deal even though Whop's post-pay redirect can't carry the token.
+  // Inline checkout via Whop Elements (cdn.whop.com/elements). The legacy loader
+  // (js.whop.com/static/checkout/loader.js) renders "no longer available" — this is the
+  // current SDK. returnUrl carries our token back; onComplete navigates after inline pay.
+  // If the SDK can't load, fall back to a button to the working hosted checkout link.
   if(!/^https?:\/\//i.test(String(deal.whop||''))){
     box.innerHTML = '<div class="err">This link is missing its checkout. Please contact us.</div>'; return;
   }
-  box.innerHTML = '';
-  var wrap = document.createElement('div'); wrap.style.cssText = 'padding:34px 24px;text-align:center';
-  var note = document.createElement('div'); note.style.cssText = 'font-size:14px;color:#dfe2e8;line-height:1.55;margin-bottom:20px';
-  note.textContent = signed
-    ? 'You’ve signed your agreement — complete your secure payment below to finish.'
-    : 'Complete your secure payment, then you’ll sign your agreement.';
-  var a = document.createElement('a'); a.href = deal.whop; a.target = '_top';
-  a.textContent = 'Continue to secure checkout →';
-  a.style.cssText = 'display:inline-block;background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:16px 30px;border-radius:14px';
-  var sec = document.createElement('div'); sec.style.cssText = 'margin-top:14px;font-size:11.5px;color:var(--mut2)';
-  sec.textContent = '🔒 Payment processed securely by Whop';
-  wrap.appendChild(note); wrap.appendChild(a); wrap.appendChild(sec); box.appendChild(wrap);
+  var planId = (String(deal.whop).match(/(plan_[A-Za-z0-9]+)/) || [])[1];
+  var dest = signed ? 'https://jittergrowth.com/urin'
+                    : ('https://jittergrowth.com/ament?t=' + encodeURIComponent(t));
+  function goDest(){ try{ window.top.location.href = dest; }catch(e){ window.location.href = dest; } }
+  function fallbackButton(){
+    box.innerHTML = '';
+    var wrap = document.createElement('div'); wrap.style.cssText = 'padding:34px 24px;text-align:center';
+    var note = document.createElement('div'); note.style.cssText = 'font-size:14px;color:#dfe2e8;line-height:1.55;margin-bottom:20px';
+    note.textContent = signed ? 'You’ve signed — complete your secure payment to finish.' : 'Continue to your secure checkout to complete payment.';
+    var a = document.createElement('a'); a.href = deal.whop; a.target = '_top'; a.textContent = 'Continue to secure checkout →';
+    a.style.cssText = 'display:inline-block;background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:16px 30px;border-radius:14px';
+    wrap.appendChild(note); wrap.appendChild(a); box.appendChild(wrap);
+  }
+  if(!planId){ fallbackButton(); return; }
+  var tries = 0;
+  (function mountWhop(){
+    if(!window.WhopElements){ if(tries++ < 40){ return setTimeout(mountWhop, 150); } return fallbackButton(); }
+    try{
+      box.innerHTML = '';
+      var co = window.WhopElements().checkout.create({
+        plan: planId,
+        returnUrl: dest,
+        onComplete: function(c){ if(!c || c.result === 'payment'){ goDest(); } }
+      });
+      co.create('checkout').mount('#checkout');
+    }catch(e){ fallbackButton(); }
+  })();
 })();
 </script>
 </body>

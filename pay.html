@@ -210,6 +210,7 @@
       var co = window.WhopElements().checkout.create({
         plan: planId,
         returnUrl: dest,
+        appearance: { theme: { appearance: 'dark', accentColor: 'violet' } },
         onComplete: function(c){ if(!c || c.result === 'payment'){ goDest(); } }
       });
       co.create('checkout').mount('#checkout');

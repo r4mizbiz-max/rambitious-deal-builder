@@ -155,7 +155,7 @@
       <div class="f" id="minDailyWrap"><label>Min ad spend / day ($)</label><input id="minDaily" type="number" value="150" min="0" step="10"></div>
     </div>
     <div class="grid">
-      <div class="f" id="daysWrap"><label id="lblDays">Fulfillment window (days)</label><input id="days" type="number" value="31" min="1" step="1"></div>
+      <div class="f" id="daysWrap"><label id="lblDays">Fulfillment window (days)</label><input id="days" type="number" value="31" min="0" step="1" placeholder="0 = no deadline"></div>
       <div class="f"><label>Niche (optional)</label><input id="niche" type="text" placeholder="e.g. Bathroom / Walk-In Shower"></div>
     </div>
 
@@ -269,7 +269,7 @@ function syncFields(){
   $('estWrap').classList.toggle('hide', !isProgram);
   // days: program (fulfillment) + trial (trial period) + retainer (cancellation notice)
   $('daysWrap').classList.toggle('hide', !(isProgram || isTrial || isRetainer));
-  $('lblDays').textContent = isTrial ? 'Trial period (days)' : isRetainer ? 'Cancellation notice (days)' : 'Fulfillment window (days)';
+  $('lblDays').textContent = isTrial ? 'Trial period (days)' : isRetainer ? 'Cancellation notice (days)' : 'Delivery window (days · 0 = none)';
   // minimum term (months) — retainer only
   $('termRow').classList.toggle('hide', !isRetainer);
 
@@ -351,7 +351,7 @@ function spendPhrase(d){
 function renderPreview(){
   const d = deal();
   let core;
-  if (d.type === 'program')      core = '<b>Program.</b> $'+fmt(d.upfront)+' for <b>'+d.estimates+'</b> qualified estimates. Fulfilled within <b>'+d.days+'</b> days.';
+  if (d.type === 'program')      core = '<b>Program.</b> $'+fmt(d.upfront)+' for <b>'+d.estimates+'</b> qualified estimates.' + (d.days>0 ? ' Fulfilled within <b>'+d.days+'</b> days.' : ' No fixed delivery deadline.');
   else if (d.type === 'payg')    core = '<b>Pay-as-you-go.</b> $'+fmt(d.upfront)+' upfront + <b>$'+fmt(d.perAppt)+'</b> per showed appointment.';
   else if (d.type === 'trial')   core = '<b>Trial.</b> $'+fmt(d.upfront)+' setup + <b>$'+fmt(d.perAppt)+'</b> per seated appt, over <b>'+d.days+'</b> days.';
   else if (d.type === 'retainer') core = '<b>Retainer.</b> <b>$'+fmt(d.upfront)+'</b>/month' + (d.term>0 ? ', '+d.term+'-month minimum' : ', month-to-month') + (d.days>0 ? '. '+d.days+'-day cancellation notice.' : '.');
@@ -368,6 +368,29 @@ function encodeToken(obj){
   const json = JSON.stringify(obj);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+/* Drop defaults/empties so the link is as short as possible.
+   The agreement + pay pages restore every dropped field via normalize()/params()
+   (same defaults), so a compact token behaves identically to a full one. */
+function compact(d){
+  const o = Object.assign({}, d);
+  const payStyleMatters = (d.payment === 'whop' && d.flow === 'sign');
+  if (o.upfront === 0)   delete o.upfront;
+  if (o.perAppt === 0)   delete o.perAppt;
+  if (o.estimates === 0) delete o.estimates;
+  if (o.minDaily === 0)  delete o.minDaily;
+  if (o.days === 0)      delete o.days;
+  if (o.term === 0)      delete o.term;
+  ['niche','business','contact','title','subtitle'].forEach(k => { if (!o[k]) delete o[k]; });
+  if (Array.isArray(o.custom) && o.custom.length === 0) delete o.custom;
+  if (o.signers === 1)   delete o.signers;
+  if (o.payment === 'whop') delete o.payment;                  // normalize → whop
+  if (o.adSpend === 'client' && o.type !== 'trial') delete o.adSpend; // normalize → client (non-trial)
+  if (o.adBilling === 'weekly' || o.adBilling === '') delete o.adBilling; // params → weekly
+  if (o.flow === 'sign') delete o.flow;                        // normalize → sign
+  if (!payStyleMatters || o.payStyle === 'direct') delete o.payStyle; // redirect defaults → direct
+  return o;
 }
 
 /* Remember the last Whop checkout link per deal type (this browser only). */
@@ -402,7 +425,7 @@ $('genBtn').addEventListener('click', () => {
 
   // pay-first opens the checkout; sign-first / agreement-only open the agreement
   const root = (d.payment === 'whop' && d.flow === 'pay') ? PAY_URL : AGREEMENT_URL;
-  const link = `${root}?t=${encodeToken(d)}`;
+  const link = `${root}?t=${encodeToken(compact(d))}`;
   $('clientLink').value = link;
 
   let hint;

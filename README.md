@@ -54,10 +54,13 @@ base64url(JSON) of the deal spec:
    days, niche, business, contact, title, subtitle, whop, custom:[{h,p}…] }`
 Not sensitive — just deal terms + the public checkout link. **Legacy `pif`/`payg`/`trial` tokens
 still render** (they normalize: `pif → program`, trial defaults to agency-funded spend).
+Links are **compacted** — default/empty fields are dropped before encoding and restored by
+`normalize()`/`params()` on the signing side, so a short token behaves identically to a full one.
 
 ## Deal variants (examples)
 - **Program** — e.g. `$6,000` for `20` qualified estimates, client-funded ad spend (min `$150`/day),
-  delivered within `31` days. Pro-rata refund on shortfall.
+  delivered within `31` days. Pro-rata refund on shortfall. Set the delivery window to `0` for
+  **no fixed deadline** (guarantee by volume only — refund triggers on termination instead).
 - **Pay-as-you-go** — `$X` upfront + `$Y` per showed appointment.
 - **Trial** — short evaluation; agency can cover ad spend; ends in a review (terminate or continue).
 - **Retainer** — recurring monthly fee (billed monthly in advance); optional minimum term (months) and a cancellation-notice period (days); auto-renews month-to-month. Pairs with a Whop subscription plan link.

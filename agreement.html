@@ -288,7 +288,7 @@ function vsaDefBlocks(P){
     {li:'(e) the prospect attended and was present (in person or, where expressly agreed, virtually) for the scheduled appointment at the agreed date and time — that is, the appointment was both "seated" and "shown"; and', sub:1},
     {li:'(f) the appointment has been confirmed as seated and shown through the Supplier’s verification process, which may include call recordings, confirmation communications, calendar and booking records, and other reasonable supporting evidence.', sub:1},
     (P.type==='program'
-      ? {p:'Only Verified Seated Appointments count toward the guarantee in Section 3. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, do not count toward the guarantee; the Supplier will continue delivering appointments until the guaranteed number of Verified Seated Appointments is reached, subject to the Guarantee Period.'}
+      ? {p:'Only Verified Seated Appointments count toward the guarantee in Section 3. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, do not count toward the guarantee; the Supplier will continue delivering appointments until the guaranteed number of Verified Seated Appointments is reached'+(P.period>0?', subject to the Guarantee Period':'')+'.'}
       : {p:'The Customer is billed only for Verified Seated Appointments. Bookings that result in cancellations or no-shows, and prospects that fail any of the criteria above, are not Verified Seated Appointments and are not billed.'}),
   ];
 }
@@ -301,14 +301,22 @@ function seatedDefBlocks(P){
 }
 
 function guaranteeBlocks(P){
-  const N=word(P.N), D=word(P.period);
+  const N=word(P.N), D=word(P.period), hasWin=P.period>0;
+  var g1 = hasWin
+    ? 'The Supplier guarantees that it will deliver a minimum of '+N+' Verified Seated Appointments to the Customer within '+D+' calendar days of the Campaign Launch Date (the "Guarantee Period").'
+    : 'The Supplier guarantees that it will deliver a minimum of '+N+' Verified Seated Appointments to the Customer (the "Guarantee"). No fixed delivery deadline applies; the Supplier will continue to deliver appointments until the guaranteed number of Verified Seated Appointments has been delivered.';
+  var g2 = hasWin
+    ? 'The "Campaign Launch Date" is the date on which the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier. The Guarantee Period shall be paused (tolled) for any period during which the campaign is suspended or paused due to non-payment, late payment, or any cause attributable to the Customer (see Schedule 2).'
+    : 'The "Campaign Launch Date" is the date on which the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier. Delivery under the Guarantee shall be paused for any period during which the campaign is suspended or paused due to non-payment, late payment, or any cause attributable to the Customer (see Schedule 2).';
+  var s1 = hasWin
+    ? 'If, at the end of the Guarantee Period, the Supplier has delivered fewer than '+N+' Verified Seated Appointments, the Supplier shall refund the Customer '+money(P.per)+' for each Verified Seated Appointment not delivered below the guaranteed '+N+'.'
+    : 'If this Agreement is terminated, or the engagement otherwise ends by agreement of the Parties, before the Supplier has delivered '+N+' Verified Seated Appointments, the Supplier shall refund the Customer '+money(P.per)+' for each Verified Seated Appointment not delivered below the guaranteed '+N+'.';
+  var s2 = 'For the avoidance of doubt, this pro-rata refund applies solely to the prepaid Appointment Package Fee set out in Schedule 2 and constitutes the Customer’s sole and exclusive remedy for any shortfall in the number of Verified Seated Appointments delivered.'+(P.adSpend==='client'?' Advertising spend is paid to third-party advertising platforms and is non-refundable.':'')+' Any refund due under this Section shall be paid within thirty (30) days following '+(hasWin?'the end of the Guarantee Period':'the end of the engagement')+'.';
   return [
     {h3:'3. Appointment Guarantee'},
-    {p:'The Supplier guarantees that it will deliver a minimum of '+N+' Verified Seated Appointments to the Customer within '+D+' calendar days of the Campaign Launch Date (the "Guarantee Period").'},
-    {p:'The "Campaign Launch Date" is the date on which the Supplier’s advertising campaign first goes live, as confirmed in writing by the Supplier. The Guarantee Period shall be paused (tolled) for any period during which the campaign is suspended or paused due to non-payment, late payment, or any cause attributable to the Customer (see Schedule 2).'},
+    {p:g1},{p:g2},
     {h3:'4. Shortfall — Pro-Rata Refund'},
-    {p:'If, at the end of the Guarantee Period, the Supplier has delivered fewer than '+N+' Verified Seated Appointments, the Supplier shall refund the Customer '+money(P.per)+' for each Verified Seated Appointment not delivered below the guaranteed '+N+'.'},
-    {p:'For the avoidance of doubt, this pro-rata refund applies solely to the prepaid Appointment Package Fee set out in Schedule 2 and constitutes the Customer’s sole and exclusive remedy for any shortfall in the number of Verified Seated Appointments delivered.'+(P.adSpend==='client'?' Advertising spend is paid to third-party advertising platforms and is non-refundable.':'')+' Any refund due under this Section shall be paid within thirty (30) days following the end of the Guarantee Period.'},
+    {p:s1},{p:s2},
   ];
 }
 
@@ -408,7 +416,7 @@ function chargesBlocks(P){
     : 'Advertising Spend. Advertising spend is funded by the Customer at '+money(P.day)+' USD per day and is invoiced weekly in advance at '+money(P.week)+' USD per seven (7)-day period. The first advertising-spend invoice is issued and payable on the Campaign Launch Date. Advertising spend is paid to third-party advertising platforms and is non-refundable.');
   else if(P.adSpend==='agency') clauses.push('Advertising Spend. The Supplier shall fund and cover one hundred percent (100%) of the advertising spend at its own cost. The Customer is not required to provide ad-account access, logins, or payment credentials for advertising spend.');
   clauses.push('Authorization. The Customer authorizes the Supplier (and its payment processor) to charge the Customer’s designated payment method for all amounts due under this Agreement as and when they fall due.');
-  clauses.push('Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of services at the Supplier’s discretion'+(P.type==='program'?'. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.':'.'));
+  clauses.push('Late or Failed Payment. Late, declined, or failed payments may result in the pause or suspension of services at the Supplier’s discretion'+(P.type==='program'?(P.period>0?'. The Guarantee Period shall be tolled (paused) for the duration of any such pause caused by the Customer’s non-payment.':'. Delivery under the Guarantee shall be paused for the duration of any such pause caused by the Customer’s non-payment.'):'.'));
 
   var out = [{h:'Schedule 2 — Charges & Payment'},{h3:'1. Fee Structure'},{table:rows},{h3:'2. Payment Terms'}];
   var L = 'abcdefghij';
@@ -519,7 +527,8 @@ function termsRows(P){
   if(P.type==='program'){
     rows.push(['Appointment Package Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
     rows.push(['Appointments Guaranteed', P.N+' Verified Seated Appointments']);
-    rows.push(['Guarantee Period', P.period+' calendar days from Campaign Launch Date']);
+    if(P.period>0) rows.push(['Guarantee Period', P.period+' calendar days from Campaign Launch Date']);
+    else rows.push(['Delivery', 'No fixed deadline — guaranteed by volume']);
   } else if(P.type==='trial'){
     if(P.fee>0) rows.push(['Trial Setup Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
     if(P.per>0) rows.push(['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment']);

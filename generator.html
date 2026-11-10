@@ -261,7 +261,7 @@ function syncFields(){
   const isProgram = TYPE === 'program', isPayg = TYPE === 'payg', isTrial = TYPE === 'trial', isFlat = TYPE === 'flat', isRetainer = TYPE === 'retainer';
 
   // upfront label
-  $('lblUpfront').textContent = isProgram ? 'Total price ($)' : isTrial ? 'Trial setup fee ($)' : isFlat ? 'Flat fee ($)' : isRetainer ? 'Monthly retainer ($)' : 'Upfront / setup fee ($)';
+  $('lblUpfront').textContent = isProgram ? 'Total price ($)' : isTrial ? 'Trial setup fee ($)' : isFlat ? 'Flat fee ($)' : isRetainer ? 'Monthly retainer ($)' : 'Setup fee ($) — optional, non-refundable';
   // per-appt only for payg + trial
   $('perApptWrap').classList.toggle('hide', !(isPayg || isTrial));
   $('lblPer').textContent = isTrial ? 'Per seated appt ($)' : 'Per appointment ($)';
@@ -291,6 +291,7 @@ function syncFields(){
 
   if (isProgram && $('upfront').value === '997') $('upfront').value = '6000';
   if (isRetainer && $('upfront').value === '6000') $('upfront').value = '2500';   // program default → sane monthly
+  if (isPayg && $('upfront').value === '6000') $('upfront').value = '0';          // payg setup fee is optional
   if (isRetainer && $('days').value === '31') $('days').value = '30';             // typical cancellation notice
   renderPreview();
 }
@@ -352,7 +353,7 @@ function renderPreview(){
   const d = deal();
   let core;
   if (d.type === 'program')      core = '<b>Program.</b> $'+fmt(d.upfront)+' for <b>'+d.estimates+'</b> qualified estimates.' + (d.days>0 ? ' Fulfilled within <b>'+d.days+'</b> days.' : ' No fixed delivery deadline.');
-  else if (d.type === 'payg')    core = '<b>Pay-as-you-go.</b> $'+fmt(d.upfront)+' upfront + <b>$'+fmt(d.perAppt)+'</b> per showed appointment.';
+  else if (d.type === 'payg')    core = '<b>Pay-as-you-go.</b> ' + (d.upfront>0 ? '$'+fmt(d.upfront)+' setup (non-refundable) + ' : '') + '<b>$'+fmt(d.perAppt)+'</b> per showed appointment. Cancel anytime, no commitment.';
   else if (d.type === 'trial')   core = '<b>Trial.</b> $'+fmt(d.upfront)+' setup + <b>$'+fmt(d.perAppt)+'</b> per seated appt, over <b>'+d.days+'</b> days.';
   else if (d.type === 'retainer') core = '<b>Retainer.</b> <b>$'+fmt(d.upfront)+'</b>/month' + (d.term>0 ? ', '+d.term+'-month minimum' : ', month-to-month') + (d.days>0 ? '. '+d.days+'-day cancellation notice.' : '.');
   else                           core = '<b>Flat / Custom.</b> $'+fmt(d.upfront)+' flat fee.';

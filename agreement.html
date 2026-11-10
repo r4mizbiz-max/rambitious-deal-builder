@@ -387,8 +387,8 @@ function chargesBlocks(P){
     if(P.per>0) rows.push(['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment delivered']);
   } else if(P.type==='payg'){
     if(P.fee>0){
-      rows.push(['Upfront / Setup Fee', money(P.fee)+' USD — one-time, payable in full on signing']);
-      feeBody = 'Upfront Fee. The upfront fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date and is non-refundable.';
+      rows.push(['Setup Fee', money(P.fee)+' USD — one-time, payable in full on signing (non-refundable)']);
+      feeBody = 'Setup Fee. The Setup Fee of '+money(P.fee)+' USD is due in full upon signing this Agreement and prior to the Campaign Launch Date. The Setup Fee is non-refundable in all circumstances, including upon cancellation of this Agreement by either Party.';
     }
     if(P.per>0) rows.push(['Per-Appointment Fee', money(P.per)+' USD per showed appointment']);
   } else if(P.type==='retainer'){
@@ -460,14 +460,19 @@ function generalBlocks(P){
   if(P.type==='program') termP = 'This Agreement commences on the Effective Date and continues until the guaranteed '+word(P.N)+' Verified Seated Appointments have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. Except for the pro-rata refund expressly provided in Schedule 1, Section 4, all fees paid are non-refundable'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
   else if(P.type==='trial') termP = 'This Agreement commences on the Effective Date and governs the Trial only. Any continuation beyond the Trial Period requires a new written agreement signed by both Parties. All fees paid for services rendered during the Trial are non-refundable.';
   else if(P.type==='retainer') termP = 'This Agreement commences on the Effective Date and continues on the recurring monthly retainer basis set out in Schedule 3 until cancelled by either Party in accordance with that Schedule. Monthly retainer fees are non-refundable once the monthly period to which they relate has commenced'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
+  else if(P.type==='payg') termP = 'This Agreement commences on the Effective Date and operates on a pay-as-you-go basis. There is no minimum term and no ongoing commitment: either Party may cancel this Agreement at any time, effective immediately upon written notice (including by email) to the other Party, and upon cancellation neither Party shall have any further obligation to the other save for amounts already accrued or due as at the date of cancellation. '+(P.fee>0?'Any Setup Fee paid and any fees for appointments already delivered are non-refundable':'Any fees for appointments already delivered are non-refundable')+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
   else termP = 'This Agreement commences on the Effective Date and continues until all Services have been delivered and all sums due have been paid, unless terminated earlier in accordance with its terms. All fees paid are non-refundable'+(P.adSpend==='client'?', and advertising spend is non-refundable in all circumstances':'')+'.';
 
   var out = [
     {h:'General Terms'},
     {h3:'Term & Termination'},
     {p:termP},
+    {h3:'Performance Review & Repricing'},
+    {p:'After forty-five (45) days of active work under this Agreement, the Parties shall hold a performance review (the "Check-In") to assess results, campaign performance, and the overall structure of the engagement. Following the Check-In, the Parties may, by mutual written agreement (including by email), adjust the pricing model and/or structure of the Services on a going-forward basis — including, for example, moving to a pricing model better suited to scaling. No change to pricing or structure shall take effect unless agreed in writing by both Parties; until any such change is so agreed, the terms of this Agreement remain in full force and effect.'},
     {h3:'Independent Contractor'},
     {p:'The Supplier is engaged as an independent contractor. Nothing in this Agreement creates a partnership, joint venture, agency, franchise, or employment relationship between the Parties.'},
+    {h3:'Ownership of Assets & Intellectual Property'},
+    {p:'All advertising campaigns, ad creative, copy, landing pages, funnels, automations, workflows, tracking and reporting systems, templates, software, and other materials and systems created, configured, developed, or provided by the Supplier in connection with the Services (collectively, the "Supplier Assets") are and shall remain the sole and exclusive property of the Supplier. The Customer is granted a limited, non-exclusive, non-transferable licence to the benefit of the Supplier Assets solely for the term of this Agreement and solely in connection with the Services. Upon expiry or termination of this Agreement for any reason, that licence immediately and automatically terminates: the Customer shall immediately cease all use of the Supplier Assets and shall not copy, reproduce, retain, operate, repurpose, resell, or continue to run any of them, whether itself or through any third party. For the avoidance of doubt, the Customer retains ownership of its own pre-existing trademarks, brand assets, and its own customer and contact data.'},
     {h3:'Use of Client Results'},
     {p:'The Customer grants the Supplier the right to use performance results, case studies, and campaign outcomes for marketing, promotional, and educational purposes. Confidential information will be excluded unless separately consented to in writing. This permission survives termination of this Agreement.'},
     {h3:'Confidentiality'},
@@ -534,8 +539,9 @@ function termsRows(P){
     if(P.per>0) rows.push(['Per-Seated-Appointment Fee', money(P.per)+' USD per Seated Appointment']);
     if(P.period) rows.push(['Trial Period', P.period+' calendar days from Campaign Launch Date']);
   } else if(P.type==='payg'){
-    if(P.fee>0) rows.push(['Upfront / Setup Fee', money(P.fee)+' USD — one-time, paid in full on signing']);
+    if(P.fee>0) rows.push(['Setup Fee', money(P.fee)+' USD — one-time, paid in full on signing (non-refundable)']);
     rows.push(['Per-Appointment Fee', money(P.per)+' USD per showed appointment']);
+    rows.push(['Cancellation', 'Either Party may cancel at any time — no minimum term or commitment']);
   } else if(P.type==='retainer'){
     if(P.fee>0) rows.push(['Monthly Retainer', money(P.fee)+' USD per month, billed monthly in advance']);
     rows.push(['Minimum Term', P.term>0 ? (P.term+' month'+(P.term>1?'s':'')) : 'Month-to-month']);

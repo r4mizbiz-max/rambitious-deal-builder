@@ -168,18 +168,18 @@
 
   // value stack
   var items = [
-    ['Unbranded ad-creative library, built for your trade', '$2,500'],
-    ['Custom funnel + landing pages', '$2,000'],
-    ['In-house setting team · speed-to-lead < 5 min', '$3,000'],
-    ['CRM, routing, reminders & no-show automations', '$1,500'],
-    ['Daily campaign management & optimization', '$2,000'],
+    ['Unbranded ad-creative library, built for your trade'],
+    ['Custom funnel + landing pages'],
+    ['In-house setting team · speed-to-lead < 5 min'],
+    ['CRM, routing, reminders & no-show automations'],
+    ['Daily campaign management & optimization'],
     ['No-show credit protection', 'included'],
     [retainer ? 'Full-service growth management — every month' : pif ? (est + ' qualified seated estimates — guaranteed') : ('Pay only when they show — ' + fmt(deal.perAppt) + '/appt'), 'the deliverable', true],
   ];
   $('stack').innerHTML = items.map(function(it){
-    return '<li'+(it[2]?' class="head"':'')+'><span class="ck">✓</span><span>'+it[0]+'</span><span class="v">'+it[1]+'</span></li>';
+    return '<li'+(it[2]?' class="head"':'')+'><span class="ck">✓</span><span>'+it[0]+'</span>'+(it[1]?'<span class="v">'+it[1]+'</span>':'')+'</li>';
   }).join('');
-  if(pif){ $('totals').style.display='flex'; $('tvNum').textContent='$11,000+'; $('nowNum').textContent=fmt(deal.upfront); }
+  if(pif){ $('totals').style.display='flex'; var tv=document.querySelector('#totals .tv'); if(tv) tv.style.display='none'; $('nowNum').textContent=fmt(deal.upfront); }
 
   // Inline checkout via Whop Elements (cdn.whop.com/elements). The legacy loader
   // (js.whop.com/static/checkout/loader.js) renders "no longer available" — this is the

@@ -63,16 +63,20 @@ function createWhopPlan(price, label) {
     if (!product) return { ok: false, error: 'WHOP_PRODUCT_ID not set in Script Properties' };
     if (!price)   return { ok: false, error: 'missing price' };
 
+    // Whop's CURRENT API (v2 is refused from 2026-11-13). Plans are "variants"
+    // here; ids still start with plan_. Body verified against the live account
+    // on 2026-11-10.
     var payload = {
       product_id: product,
-      plan_type: 'one_time',
+      billing_type: 'one_time',
       release_method: 'buy_now',
-      initial_price: Number(price),
-      base_currency: 'usd',
+      initial_price: Number(price),   // dollars
+      currency: 'usd',
       visibility: 'quick_link',
+      unlimited_stock: true,
       internal_notes: label ? decodeURIComponent(label) : 'Rambitious deal link'
     };
-    var res = UrlFetchApp.fetch('https://api.whop.com/v2/plans', {
+    var res = UrlFetchApp.fetch('https://api.whop.com/api/v1/variants', {
       method: 'post',
       contentType: 'application/json',
       headers: { Authorization: 'Bearer ' + key },
@@ -81,7 +85,7 @@ function createWhopPlan(price, label) {
     });
     var data = JSON.parse(res.getContentText());
     if (data && data.id) {
-      return { ok: true, plan_id: data.id, link: (data.direct_link || ('https://whop.com/checkout/' + data.id)) };
+      return { ok: true, plan_id: data.id, link: (data.purchase_url || data.direct_link || ('https://whop.com/checkout/' + data.id)) };
     }
     return { ok: false, error: (data && data.error && data.error.message) || res.getContentText().slice(0, 200) };
   } catch (err) {
